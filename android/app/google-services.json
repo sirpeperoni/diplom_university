@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "905920161280",
+    "project_id": "universityflutterproject",
+    "storage_bucket": "universityflutterproject.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:905920161280:android:711ea0c00919015b42dae5",
+        "android_client_info": {
+          "package_name": "com.example.university"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBlUkcCg-qGB0si-AwsJevCC_FIrX3o-3A"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:905920161280:android:077106953711885742dae5",
+        "android_client_info": {
+          "package_name": "com.sirpeperoni.flutterchatapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBlUkcCg-qGB0si-AwsJevCC_FIrX3o-3A"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
