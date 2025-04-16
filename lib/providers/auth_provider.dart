@@ -1,43 +1,53 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 
 import 'package:chat_app_diplom/constants.dart';
+import 'package:chat_app_diplom/entity/auth_response_model.dart';
+import 'package:chat_app_diplom/entity/email_data.dart';
 import 'package:chat_app_diplom/entity/last_message_model.dart';
 import 'package:chat_app_diplom/entity/user_model.dart';
+import 'package:chat_app_diplom/repositories/auth_repository.dart';
+import 'package:chat_app_diplom/repositories/email_repository.dart';
+import 'package:chat_app_diplom/repositories/shared_preferences_repository.dart';
 import 'package:chat_app_diplom/utilities/global_methods.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_storage/firebase_storage.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthenticationProvider extends ChangeNotifier {
+  final AuthRepository _authRepository;
+  final SharedPreferencesRepository _sharedPreferencesRepository;
+  final EmailRepository _emailRepository;
+  AuthenticationProvider(this._authRepository, this._sharedPreferencesRepository, this._emailRepository);
+
   bool _isLoading = false;
   bool _isSuccessful = false;
   String? _uid;
-  String? _phoneNumber;
+  String? _email;
   UserModel? _userModel;
 
   bool get isLoading => _isLoading;
   bool get isSuccessful => _isSuccessful;
   String? get uid => _uid;
-  String? get phoneNumber => _phoneNumber;
+  String? get email => _email;
   UserModel? get userModel => _userModel;
 
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final FirebaseStorage  _storage = FirebaseStorage.instance;
-
+  final dio = Dio();
+  
   //check authentication state
   Future<bool> checkAuthenticationState() async {
     bool isSignedIn = false;
     await Future.delayed(const Duration(seconds: 2));
-    if(_auth.currentUser != null) {
-      _uid = _auth.currentUser!.uid;
+    if(await _authRepository.currentUser() != null) {
+      final currentUser = await _authRepository.currentUser();
+      _uid = currentUser!.uid;
       
       await getUserDataFromFirestore();
 
-      await saveUserDataToSharedPreferences();
+      await saveUserData();
 
       notifyListeners();
       isSignedIn = true;
@@ -50,116 +60,157 @@ class AuthenticationProvider extends ChangeNotifier {
 
   // check if user exists
   Future<bool> checkIfUserExists() async {
-    DocumentSnapshot documentSnapshot = await _firestore.collection(Constants.users).doc(_uid).get();
-    if (documentSnapshot.exists) {
-      return true;
-    } else {
-      return false;
-    }
+    return _authRepository.checkIfUserExists(uid);
   }
+
+  
 
   // update user status
   Future<void> updateUserStatus({required bool value}) async {
-    await _firestore
-        .collection(Constants.users)
-        .doc(_auth.currentUser!.uid)
-        .update({Constants.isOnline: value});
+    await _authRepository.updateUserStatus(value: value, currentUser: await _authRepository.currentUser());
   }
 
   Future<void> updateUserAboutMe({required String value}) async {
-    await _firestore
-        .collection(Constants.users)
-        .doc(_auth.currentUser!.uid)
-        .update({Constants.aboutMe: value});
+    await _authRepository.updateUserAboutMe(value: value, currentUser: await _authRepository.currentUser());
   }
 
   //get user data from firestore
   Future<void> getUserDataFromFirestore() async {
-    DocumentSnapshot documentSnapshot = await _firestore.collection(Constants.users).doc(_uid).get();
-    _userModel = UserModel.fromMap(documentSnapshot.data() as Map<String, dynamic>);
+    _userModel = await _authRepository.getUserData(uid!);
     notifyListeners();
   }
 
   //save user data to shared preferences
-  Future<void> saveUserDataToSharedPreferences() async {
-    SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
-    await sharedPreferences.setString(Constants.userModel, jsonEncode(userModel!.toMap()));
+  Future<void> saveUserData() async {
+    if (userModel == null) {
+      throw Exception("UserModel is null");
+    }
+    final jsonData = jsonEncode(userModel!.toMap());
+    await _sharedPreferencesRepository.saveUserData(Constants.userModel, jsonData);
   }
 
   //get user data from shared preferences
   Future<void> getUserDataFromSharedPreferences() async {
-    SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
-    String userModelString = sharedPreferences.getString(Constants.userModel) ?? '';
-    _userModel = UserModel.fromMap(jsonDecode(userModelString));
+    _userModel = await _sharedPreferencesRepository.getUserDataFromSharedPreferences();
     _uid = _userModel!.uid;
-    _phoneNumber = _userModel!.phoneNumber;
+    _email = _userModel!.email;
     notifyListeners();
   }
 
+  //sign in with email and password
+  String generateOTP() {
+    return (100000 + Random().nextInt(900000)).toString();
+  }
+
+  Future<void> saveOTPToSharedPrefernce(String otp) async {
+    // Сохраняем OTP в SharedPreferences
+    _sharedPreferencesRepository.saveOTPToSharedPrefernce(otp);
+  }
+
+  
 
   //sign in with phone number
-  Future<void> signInWithPhoneNumber({required String phoneNumber,required BuildContext context}) async {
-    _isLoading = true;
-    notifyListeners();
-    try {
-      await _auth.verifyPhoneNumber(
-        phoneNumber: phoneNumber,
-        verificationCompleted: (PhoneAuthCredential credential) async {
-          await _auth.signInWithCredential(credential).then((value) async {
-            _uid = value.user!.uid;
-            _phoneNumber = value.user!.phoneNumber;
-            _isSuccessful = true;
-            _isLoading = false;
-            notifyListeners();
-          });
-        },
-        verificationFailed: (FirebaseAuthException e) {
-          _isSuccessful = false;
-          _isLoading = false;
-          notifyListeners();
-          showSnackBar(context, e.toString());
-        },
-        codeSent: (String verificationId, int? resendToken) {
-          _isLoading = false;
-          notifyListeners();
-          //navigate to otp screen
-          Navigator.pushNamed(context, Constants.otpScreen, arguments: {
-            Constants.phoneNumber: phoneNumber,
-            Constants.verificationId: verificationId,
-          });
-        },
-        codeAutoRetrievalTimeout: (String verificationId) {},
-      );
-    } catch (e) {
-      throw Exception(e.toString());
-    }
-  }
-
-  // verify otp code
-  Future<void> verifyOTP({
-    required String verificationId,
-    required String otpCode, 
-    required BuildContext context,
-    required Function onSuccess  
+  Future<void> sendCodeEmail({
+    required String email,
+    required String password,
+    required String otp,
+    required BuildContext context
   }) async {
     _isLoading = true;
     notifyListeners();
-    try {
-      PhoneAuthCredential credential = PhoneAuthProvider.credential(verificationId: verificationId, smsCode: otpCode);
-      await _auth.signInWithCredential(credential).then((value) async {
-        _uid = value.user!.uid;
-        _phoneNumber = value.user!.phoneNumber;
-        _isSuccessful = true;
-        _isLoading = false;
-        onSuccess();
-        notifyListeners();
-      });
-    } catch (e) {
+    final responseModel = await _authRepository.sendCodeEmail(
+      email: email, 
+      password: password
+    );
+    if(responseModel.isSuccessful){
+      _isSuccessful = responseModel.isSuccessful;
       _isLoading = false;
-      _isSuccessful = false;
+      // ignore: duplicate_ignore
+      // ignore: use_build_context_synchronously
+      showSnackBar(context, 'Такой пользователь уже зарегистрирован');
       notifyListeners();
-      showSnackBar(context, e.toString());
     }
+    if(responseModel.errorMessage == 'wrong-password'){
+      _isSuccessful = false;
+      _isLoading = false;
+      showSnackBar(context, 'Такой пользователь уже зарегистрирован');
+      notifyListeners();
+    }
+    if(responseModel.errorMessage == 'user-not-found'){  
+      final requestModel = EmailData(
+        email: email, 
+        otp: otp
+      );
+      await _emailRepository.sendOtpCode(requestModel);
+      
+      Navigator.pushNamed(context, Constants.otpScreen, arguments: {
+          Constants.email: email,
+          Constants.password: password,
+      });
+    } 
+  }
+
+  Future<bool> checkOTP(String? otp) async {
+    return _sharedPreferencesRepository.checkOTP(otp);
+  }
+
+  // verify otp code
+  Future<void> signInWithEmailAndPassword({
+    required String email,
+    required String password, 
+    required BuildContext context,
+    required Function onSuccess
+  }) async {
+    _isLoading = true;
+    notifyListeners();
+    final user = await _authRepository.signInWithEmailAndPassword(email: email, password: password);
+    if(user.isSuccessful){
+      _uid = user.uid;
+      _email = user.email;
+      _isSuccessful = true;
+      _isLoading = false;
+      onSuccess();
+      notifyListeners();
+    }
+    if(user.errorMessage == "wrong-password"){
+      showSnackBarAndSetLoadingAndSuccessful(context, user, "Неправильный email или пароль", false);
+    }
+    if(user.errorMessage == 'user-not-found'){
+      showSnackBarAndSetLoadingAndSuccessful(context, user, "Такого пользователя не существует", false);
+    }
+  }
+
+  void showSnackBarAndSetLoadingAndSuccessful(BuildContext context, AuthResponseModel user, String message, bool isLoading) {
+    showSnackBar(context, message);
+    _isLoading = false;
+    _isSuccessful = user.isSuccessful;
+    notifyListeners();
+  }
+
+  //register with email and password
+  Future<void> registerWithEmailAndPassword({
+    required String email,
+    required String password,
+    required BuildContext context,
+    required Function onSuccess
+  }) async {
+    _isLoading = true;
+    notifyListeners();
+    final user = await _authRepository.registerWithEmailAndPassword(email: email, password: password);
+    
+    if(user.isSuccessful){
+      _isLoading = false;
+      _uid = user.uid;
+      _email = user.email;
+      notifyListeners();
+      onSuccess();
+    } else {
+      showSnackBar(context, 'Неизвестная ошибка при создании аккаунта');
+      _isLoading = false;
+      _isSuccessful = true;
+      notifyListeners();
+    }
+
   }
   
   //save user data to firestore
@@ -171,57 +222,47 @@ class AuthenticationProvider extends ChangeNotifier {
   }) async {
     _isLoading = true;
     notifyListeners();
-
-    try {
-      if (fileImage != null) {
-        // upload image to storage
-        List<String> imageUrl = await storeFileToStorage(file: fileImage, reference:'${Constants.userImages}/${userModel.uid}');
-
-        userModel.image = imageUrl[0];
-      }
-
-      userModel.lastSeen = DateTime.now().microsecondsSinceEpoch.toString();
-      userModel.createdAt = DateTime.now().microsecondsSinceEpoch.toString();
-
-      _userModel = userModel;
-      _uid = userModel.uid;
-
-
-      // save user data to firestore
-      await _firestore
-          .collection(Constants.users)
-          .doc(userModel.uid)
-          .set(userModel.toMap());
-
+    if (fileImage != null) {
+      // upload image to storage
+      List<String> imageUrl = await storeFileToStorage(file: fileImage, reference:'${Constants.userImages}/${userModel.uid}');
+      userModel.image = imageUrl[0];
+    }
+    userModel.lastSeen = DateTime.now().microsecondsSinceEpoch.toString();
+    userModel.createdAt = DateTime.now().microsecondsSinceEpoch.toString();
+    _userModel = userModel;
+    _uid = userModel.uid;
+    final result = await _authRepository.saveUserDataToFireStore(userModel: userModel);
+    
+    if(result.isSuccessful){
       _isLoading = false;
+      _isSuccessful = true;
       notifyListeners();
       onSuccess();
-      notifyListeners();
-    } on FirebaseException catch (e) {
+    } else {
       _isLoading = false;
+      _isSuccessful = false;
       notifyListeners();
-      onFail(e.toString());
+      onFail();
     }
+
   }
 
-   Stream<DocumentSnapshot> userStream({required String userID}) {
-    return _firestore.collection(Constants.users).doc(userID).snapshots();
+  Stream<DocumentSnapshot> userStream({required String userID}) {
+    return _authRepository.userStream(userID: userID);
   }
 
 
 
   Future logout() async {
-    await _auth.signOut();
-    SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
-    await sharedPreferences.clear();
+    _authRepository.logout();
+    _uid = null;
+    _email = null;
+    _sharedPreferencesRepository.clear();
     notifyListeners();
   }
 
   Stream<QuerySnapshot> getAllUsersStream({required String userID}) {
-    return _firestore
-        .collection(Constants.users)
-        .where(Constants.uid, isNotEqualTo: userID)
-        .snapshots();
+    return _authRepository.getAllUsersStream(userID: userID);
   }
 
   //get users who have these words in their name and are not me
@@ -229,20 +270,12 @@ class AuthenticationProvider extends ChangeNotifier {
     if(searchTerm.isEmpty){
       return null;
     }
-    return _firestore
-      .collection(Constants.users)  
-      .where(
-        Constants.name,
-        isGreaterThanOrEqualTo: searchTerm,
-        isLessThan: searchTerm.substring(0, searchTerm.length - 1) +
-          String.fromCharCode(searchTerm.codeUnitAt(searchTerm.length - 1) + 1)
-      )
-      .snapshots()
+    return _authRepository.searchUsers(searchTerm: searchTerm, userID: userID)
       .map((snapshot) {
         return snapshot.docs
-            .where((doc) => doc.id != userID)
-            .map((doc) => UserModel.fromMap(doc.data()))
-            .toList();
+              .where((doc) => doc.id != userID)
+              .map((doc) => UserModel.fromMap(doc.data()))
+              .toList();
       });
   }
 
@@ -250,31 +283,23 @@ class AuthenticationProvider extends ChangeNotifier {
     if(searchTerm.isEmpty){
       return null;
     }
-    return _firestore
-      .collection(Constants.users)
-      .doc(userID)
-      .collection(Constants.chats)
-      .where(
-        Constants.contactName,
-        isGreaterThanOrEqualTo: searchTerm,
-        isLessThan: searchTerm.substring(0, searchTerm.length - 1) +
-          String.fromCharCode(searchTerm.codeUnitAt(searchTerm.length - 1) + 1)
-      )
-      .snapshots()
+    return _authRepository.searchChats(searchTerm: searchTerm, userID: userID)
       .map((snapshot) {
         return snapshot.docs
           .map((doc) => LastMessageModel.fromMap(doc.data()))
           .toList();
       });
-
   }    
 
 
+  // ignore: prefer_typing_uninitialized_variables
   var _streamUsers;
+  // ignore: prefer_typing_uninitialized_variables
   var _streamChats;
 
   get streamUsers => _streamUsers;
   get streamChats => _streamChats;
+
   void getStreamChats(String searchTerm, String userID) {
     _streamChats = searchChats(searchTerm: searchTerm, userID: userID);
     notifyListeners();
@@ -290,70 +315,20 @@ class AuthenticationProvider extends ChangeNotifier {
   Future<void> sendFriendRequest({
     required String friendID,
   }) async {
-    try {
-      // add our uid to friends request list
-      await _firestore.collection(Constants.users).doc(friendID).update({
-        Constants.friendRequestsUIDs: FieldValue.arrayUnion([_uid]),
-      });
-
-      // add friend uid to our friend requests sent list
-      await _firestore.collection(Constants.users).doc(_uid).update({
-        Constants.sentFriendRequestsUIDs: FieldValue.arrayUnion([friendID]),
-      });
-    } on FirebaseException catch (e) {
-      print(e);
-    }
+    _authRepository.sendFriendRequest(friendID: friendID, uid: _uid);
   }
 
-  Future<void> cancleFriendRequest({required String friendID}) async {
-    try {
-      // remove our uid from friends request list
-      await _firestore.collection(Constants.users).doc(friendID).update({
-        Constants.friendRequestsUIDs: FieldValue.arrayRemove([_uid]),
-      });
-
-      // remove friend uid from our friend requests sent list
-      await _firestore.collection(Constants.users).doc(_uid).update({
-        Constants.sentFriendRequestsUIDs: FieldValue.arrayRemove([friendID]),
-      });
-    } on FirebaseException catch (e) {
-      print(e);
-    }
+  Future<void> cancelFriendRequest({required String friendID}) async {
+    _authRepository.cancelFriendRequest(friendID: friendID, uid: _uid);
   }
 
-   Future<void> acceptFriendRequest({required String friendID}) async {
-    // add our uid to friends list
-    await _firestore.collection(Constants.users).doc(friendID).update({
-      Constants.friendsUIDs: FieldValue.arrayUnion([_uid]),
-    });
-
-    // add friend uid to our friends list
-    await _firestore.collection(Constants.users).doc(_uid).update({
-      Constants.friendsUIDs: FieldValue.arrayUnion([friendID]),
-    });
-
-    // remove our uid from friends request list
-    await _firestore.collection(Constants.users).doc(friendID).update({
-      Constants.sentFriendRequestsUIDs: FieldValue.arrayRemove([_uid]),
-    });
-
-    // remove friend uid from our friend requests sent list
-    await _firestore.collection(Constants.users).doc(_uid).update({
-      Constants.friendRequestsUIDs: FieldValue.arrayRemove([friendID]),
-    });
+  Future<void> acceptFriendRequest({required String friendID}) async {
+    _authRepository.acceptFriendRequest(friendID: friendID, uid: _uid);
   }
 
   // remove friend
   Future<void> removeFriend({required String friendID}) async {
-    // remove our uid from friends list
-    await _firestore.collection(Constants.users).doc(friendID).update({
-      Constants.friendsUIDs: FieldValue.arrayRemove([_uid]),
-    });
-
-    // remove friend uid from our friends list
-    await _firestore.collection(Constants.users).doc(_uid).update({
-      Constants.friendsUIDs: FieldValue.arrayRemove([friendID]),
-    });
+    _authRepository.removeFriend(friendID: friendID, uid: _uid);
   }
 
 
@@ -363,16 +338,11 @@ class AuthenticationProvider extends ChangeNotifier {
   ) async {
     List<UserModel> friendsList = [];
 
-    DocumentSnapshot documentSnapshot =
-        await _firestore.collection(Constants.users).doc(uid).get();
-
-    List<dynamic> friendsUIDs = documentSnapshot.get(Constants.friendsUIDs);
+    final friendsUIDs = await _authRepository.getListUIDs(uid, Constants.users, Constants.friendsUIDs);
 
     for (String friendUID in friendsUIDs) {
-      DocumentSnapshot documentSnapshot =
-          await _firestore.collection(Constants.users).doc(friendUID).get();
       UserModel friend =
-          UserModel.fromMap(documentSnapshot.data() as Map<String, dynamic>);
+          UserModel.fromMap(await _authRepository.getDocumentInCollectionUsers(friendUID));
       friendsList.add(friend);
     }
 
@@ -385,21 +355,11 @@ class AuthenticationProvider extends ChangeNotifier {
   }) async {
     List<UserModel> friendRequestsList = [];
 
-
-
-    DocumentSnapshot documentSnapshot =
-        await _firestore.collection(Constants.users).doc(uid).get();
-
-    List<dynamic> friendRequestsUIDs =
-        documentSnapshot.get(Constants.friendRequestsUIDs);
+    List<dynamic> friendRequestsUIDs = await _authRepository.getListUIDs(uid, Constants.users, Constants.friendRequestsUIDs);
 
     for (String friendRequestUID in friendRequestsUIDs) {
-      DocumentSnapshot documentSnapshot = await _firestore
-          .collection(Constants.users)
-          .doc(friendRequestUID)
-          .get();
       UserModel friendRequest =
-          UserModel.fromMap(documentSnapshot.data() as Map<String, dynamic>);
+          UserModel.fromMap(await _authRepository.getDocumentInCollectionUsers(friendRequestUID));
       friendRequestsList.add(friendRequest);
     }
 

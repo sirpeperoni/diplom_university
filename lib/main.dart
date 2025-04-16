@@ -2,6 +2,7 @@ import 'package:adaptive_theme/adaptive_theme.dart';
 import 'package:chat_app_diplom/auth/landing_screen.dart';
 import 'package:chat_app_diplom/auth/login_screen.dart';
 import 'package:chat_app_diplom/auth/otp_screen.dart';
+import 'package:chat_app_diplom/auth/register_screen.dart';
 import 'package:chat_app_diplom/auth/user_information_screen.dart';
 import 'package:chat_app_diplom/constants.dart';
 import 'package:chat_app_diplom/firebase_options.dart';
@@ -15,10 +16,18 @@ import 'package:chat_app_diplom/main_screen/search/search_chats_page.dart';
 import 'package:chat_app_diplom/main_screen/search/search_users_page.dart';
 import 'package:chat_app_diplom/providers/auth_provider.dart';
 import 'package:chat_app_diplom/providers/chat_provider.dart';
+import 'package:chat_app_diplom/repositories/auth_repository.dart';
+import 'package:chat_app_diplom/repositories/chat_repository.dart';
+import 'package:chat_app_diplom/repositories/email_repository.dart';
+import 'package:chat_app_diplom/repositories/shared_preferences_repository.dart';
 import 'package:chat_app_diplom/widgets/image.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:dio/dio.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -26,9 +35,21 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
   final savedThemeMode = await AdaptiveTheme.getThemeMode();
+  final sharedPreferences = await SharedPreferences.getInstance();
+
   runApp(MultiProvider(providers: [
-    ChangeNotifierProvider(create: (context) => AuthenticationProvider()),
-    ChangeNotifierProvider(create: (context) => ChatProvider()),
+    Provider(create: (_) => FirebaseAuth.instance),
+    Provider(create: (_) => FirebaseFirestore.instance),
+    Provider(create: (_) => Dio()),
+    Provider<SharedPreferences>(
+      create: (context) => sharedPreferences,
+    ),
+    Provider(create: (ctx) => AuthRepository(ctx.read<FirebaseFirestore>(), ctx.read<FirebaseAuth>())),
+    Provider(create: (ctx) => ChatRepository(ctx.read<FirebaseFirestore>())),
+    Provider(create: (ctx) => EmailRepository(ctx.read<Dio>())),
+    Provider(create: (ctx) => SharedPreferencesRepository(ctx.read<SharedPreferences>())),
+    ChangeNotifierProvider(create: (ctx) => AuthenticationProvider(ctx.read<AuthRepository>(), ctx.read<SharedPreferencesRepository>(), ctx.read<EmailRepository>())),
+    ChangeNotifierProvider(create: (ctx) => ChatProvider(ctx.read<ChatRepository>())),
   ], child: MainApp(savedThemeMode: savedThemeMode)));
 }
 
@@ -59,6 +80,7 @@ class MainApp extends StatelessWidget {
         routes: {
           Constants.landingScreen: (context) => const LandingScreen(),
           Constants.loginScreen: (context) => const LoginScreen(),
+          Constants.registerScreen: (context) => const RegisterScreen(),
           Constants.otpScreen: (context) => const OTPScreen(),
           Constants.userInformationScreen: (context) => const UserInformationScreen(),
           Constants.homeScreen: (context) => const HomeScreen(),
@@ -66,7 +88,7 @@ class MainApp extends StatelessWidget {
           Constants.friendsScreen: (context) => const FriendsScreen(),
           Constants.friendRequestsScreen: (context) => const FriendsRequestsScreen(),
           Constants.chatScreen: (context) => const ChatScreen(),
-          Constants.ImageScreen: (context) => const ImageScreen(),
+          Constants.imageScreen: (context) => const ImageScreen(),
           Constants.searchChats: (context) => const SerchChatsPage(),
           Constants.searchUsers: (context) => const SerchUsersPage(),
           Constants.editAboutMeScreem: (context) => const EditAboutMePage(),

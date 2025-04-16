@@ -1,8 +1,9 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:chat_app_diplom/constants.dart';
 import 'package:chat_app_diplom/entity/user_model.dart';
 import 'package:chat_app_diplom/providers/auth_provider.dart';
 import 'package:chat_app_diplom/utilities/global_methods.dart';
-import 'package:chat_app_diplom/widgets/friend_requests_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -163,7 +164,7 @@ class FriendsButton extends StatelessWidget {
               onPressed: () async {
                 await context
                     .read<AuthenticationProvider>()
-                    .cancleFriendRequest(friendID: userModel.uid)
+                    .cancelFriendRequest(friendID: userModel.uid)
                     .whenComplete(() {
                   showSnackBar(context, 'Запрос на добавление в друзья отменен');
                 });

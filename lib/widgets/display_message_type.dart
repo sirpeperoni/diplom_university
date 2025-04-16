@@ -57,7 +57,7 @@ class _DisplayMessageTypeState extends State<DisplayMessageType> {
               ? const Icon(Icons.image)
               : InkWell(
                 onTap: () {
-                  Navigator.pushNamed(context, Constants.ImageScreen, arguments: {
+                  Navigator.pushNamed(context, Constants.imageScreen, arguments: {
                     Constants.imageLink: widget.message,
                   });
                 },
@@ -103,24 +103,21 @@ class _DisplayMessageTypeState extends State<DisplayMessageType> {
               ),
               InkWell(
                 onTap: () async {
-                  // TODO: Implement file download logic
                   final dio = Dio();
                   final downloadDirectory = await getDownloadsDirectory();
-                  var filePath = '${downloadDirectory?.path}' + '/${widget.message}';
+                  var filePath = '${downloadDirectory?.path}' '/${widget.message}';
                   setState(() {
                     isLoading = true;
                   });
                   String? ext = widget.extension;
                   if(ext != ''){     
-                    print(ext!.substring(ext.indexOf('/') + 1));  
-                    filePath = filePath + '.${ext!.substring(ext.indexOf('/') + 1)}';
-                    print(filePath);
+                    filePath = '$filePath.${ext!.substring(ext.indexOf('/') + 1)}';
                   }
-                  final response = dio.download(widget.message, filePath, onReceiveProgress: (rcv, total) {
-                    if (total != -1) {
-                      print(
-                          'received: ${rcv.toStringAsFixed(0)} out of total: ${total.toStringAsFixed(0)}');
-                    }
+                  dio.download(widget.message, filePath, onReceiveProgress: (rcv, total) {
+                    // if (total != -1) {
+                    //   print(
+                    //       'received: ${rcv.toStringAsFixed(0)} out of total: ${total.toStringAsFixed(0)}');
+                    // }
                     setState(() {
                       progress = ((rcv / total) * 100);
                     });
@@ -130,12 +127,11 @@ class _DisplayMessageTypeState extends State<DisplayMessageType> {
                   });
                   // Handle the response as needed
                   // For example, you can show a snackbar with the download progress
-                  print(response);
                 },
                 child: isLoading ? CircularProgressIndicator(
                   value: progress / 100,
                   color: widget.color,
-                ) : Icon(
+                ) : const Icon(
                   Icons.file_copy, size: 30,
                 )
               ),

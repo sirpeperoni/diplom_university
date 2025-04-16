@@ -161,7 +161,7 @@ class _UserInformationScreenState extends State<UserInformationScreen> {
     UserModel userModel = UserModel(
       uid: model.uid!,
       name: _nameController.text.trim(),
-      phoneNumber: model.phoneNumber!,
+      email: model.email!,
       image: '',
       token: '',
       aboutMe: 'Привет, Я использую приложение Doge Chat',
@@ -178,7 +178,7 @@ class _UserInformationScreenState extends State<UserInformationScreen> {
       fileImage: finalFileImage,
       onSuccess: () async {
         // save user data to shared preferences
-        await model.saveUserDataToSharedPreferences();
+        await model.saveUserData();
 
         navigateToHomeScreen();
       },

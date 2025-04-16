@@ -1,5 +1,6 @@
 import 'package:chat_app_diplom/constants.dart';
 import 'package:chat_app_diplom/providers/auth_provider.dart';
+import 'package:chat_app_diplom/utilities/global_methods.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:pinput/pinput.dart';
@@ -27,8 +28,8 @@ class _OTPScreenState extends State<OTPScreen> {
   @override
   Widget build(BuildContext context) {
     final args = ModalRoute.of(context)!.settings.arguments as Map;
-    final phoneNumber = args[Constants.phoneNumber] as String;
-    final verificationId = args[Constants.verificationId] as String;
+    final email = args[Constants.email] as String;
+    final password = args[Constants.password] as String;
 
     final model = context.watch<AuthenticationProvider>();
     final defaultPinTheme = PinTheme(
@@ -64,7 +65,7 @@ class _OTPScreenState extends State<OTPScreen> {
                 ),
                 const SizedBox(height: 30,),
                 Text(
-                  'Введите 6-значный код, отправленный на ваш номер.',
+                  'Введите 6-значный код, отправленный на ваш email.',
                   textAlign: TextAlign.center,
                   style: GoogleFonts.openSans(
                     fontSize: 18,
@@ -73,7 +74,7 @@ class _OTPScreenState extends State<OTPScreen> {
                 ),
                 const SizedBox(height: 10,),
                 Text(
-                  phoneNumber,
+                  email,
                   style: GoogleFonts.openSans(
                     fontSize: 18,
                     fontWeight: FontWeight.w500
@@ -91,7 +92,7 @@ class _OTPScreenState extends State<OTPScreen> {
                       setState(() {
                         otpCode = pin;
                       });
-                      verifyOTPCode(verificationId: verificationId, otpCode:otpCode!);
+                      verifyOTPCode(email: email, password:password);
                     },
                     focusedPinTheme: defaultPinTheme.copyWith(
                       height: 68,
@@ -165,31 +166,40 @@ class _OTPScreenState extends State<OTPScreen> {
     );
   }
 
-  void verifyOTPCode({required String verificationId,required String otpCode}) async {
+  void verifyOTPCode({required String email,required String password}) async {
     final model = context.read<AuthenticationProvider>();
-    model.verifyOTP(
-      verificationId: verificationId, 
-      otpCode: otpCode, 
-      context: context, 
-      onSuccess: () async {
-        //1 провереть, есть ли в firestore пользователь с таким номером телефона
-        bool userExists = await model.checkIfUserExists();
-
-        //2 если есть, то 
-        if(userExists) {
-          // * получить данные пользователя из firestore
-          await model.getUserDataFromFirestore(); 
-          // * сохранить данные пользователя в shared preferences / provi
-          await model.saveUserDataToSharedPreferences();
-          //перейти на экран home screen
-          navigate(userExists: true);
+    
+    if(await model.checkOTP(otpCode)){
+      model.registerWithEmailAndPassword(
+        email: email, 
+        password: password, 
+        // ignore: use_build_context_synchronously
+        context: context, 
+        onSuccess: () async {
+          //1 провереть, есть ли в firestore пользователь с таким номером телефона
+          bool userExists = await model.checkIfUserExists();
+          if(userExists) {
+            await model.getUserDataFromFirestore(); 
+            // * сохранить данные пользователя в shared preferences / provi
+            await model.saveUserData();
+            //перейти на экран home screen
+            // ignore: use_build_context_synchronously
+            Navigator.pushNamedAndRemoveUntil(context, Constants.homeScreen, (route) => false); 
+          } else {
+            // ignore: use_build_context_synchronously
+            Navigator.pushNamed(context, Constants.userInformationScreen);
+          }
+            
         }
-        else {
-          // 3 если нет, то перейти на экран создания профиля
-          navigate(userExists: false);
-        }      
-      }
-    );
+      );
+    } else {
+      setState(() {
+        otpCode = '';
+      });
+      // ignore: use_build_context_synchronously
+      showSnackBar(context, 'Неверный код');
+    }
+    
   }
 
   void navigate({required bool userExists}) {

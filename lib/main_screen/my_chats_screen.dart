@@ -2,10 +2,7 @@ import 'package:chat_app_diplom/constants.dart';
 import 'package:chat_app_diplom/entity/last_message_model.dart';
 import 'package:chat_app_diplom/providers/auth_provider.dart';
 import 'package:chat_app_diplom/providers/chat_provider.dart';
-import 'package:chat_app_diplom/utilities/global_methods.dart';
 import 'package:chat_app_diplom/widgets/chat_widget.dart';
-import 'package:chat_app_diplom/widgets/unread_message_counter.dart';
-import 'package:date_format/date_format.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -31,6 +28,7 @@ class _MyChatsScreenState extends State<MyChatsScreen> {
               style: const TextStyle(
                 color: Colors.white,
               ),
+              // ignore: avoid_print
               onChanged: (value) => print(value),
               onTap: () {
                 Navigator.pushNamed(context, Constants.searchChats);

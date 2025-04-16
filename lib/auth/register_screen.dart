@@ -8,16 +8,17 @@ import 'package:provider/provider.dart';
 
 
 
-class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+class RegisterScreen extends StatefulWidget {
+  const RegisterScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  State<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _RegisterScreenState extends State<RegisterScreen> {
   final  TextEditingController _emailController = TextEditingController();
   final  TextEditingController _passwordController = TextEditingController();
+  final  TextEditingController _repeatPasswordController = TextEditingController();
 
   @override
   void dispose() {
@@ -54,7 +55,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 20,),
                 Text(
-                  'Войдите с помощью вашего email и пароля', 
+                  'Добавьте свой Email, и вам будет отправлен код для подтверждения.',
                   textAlign: TextAlign.center,
                   style: 
                     GoogleFonts.openSans(
@@ -137,9 +138,47 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   )
                 ),
+                const SizedBox(height: 20,),
+                TextFormField(
+                  controller: _repeatPasswordController,
+                  onChanged: (value){
+                    setState(() {
+                      _repeatPasswordController.text = value;
+                    });
+                  },
+                  textInputAction: TextInputAction.done,
+                  obscureText: true,
+                  enableSuggestions: false,
+                  autocorrect: false,
+                  decoration: InputDecoration(
+                    counterText: '',
+                    hintText: 'Повторите пароль',
+                    suffixIcon: _repeatPasswordController.text.length >= 6 && _repeatPasswordController.text == _passwordController.text ? Container(
+                                height: 35,
+                                width: 35,
+                                margin: const EdgeInsets.all(10),
+                                decoration: const BoxDecoration(
+                                  color: Colors.green,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.done,
+                                  color: Colors.white,
+                                  size: 25,
+                                ),
+                              ) : null,
+                    hintStyle: GoogleFonts.openSans(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  )
+                ),
                 TextButton(onPressed: () {
-                  Navigator.pushNamed(context, Constants.registerScreen);
-                }, child: Text("Нету аккаунта? Зарегистрироваться", style: GoogleFonts.openSans(fontSize: 16, fontWeight: FontWeight.w500),)),
+                  Navigator.pushNamed(context, Constants.loginScreen);
+                }, child: Text("Уже есть аккаунт? Войти", style: GoogleFonts.openSans(fontSize: 16, fontWeight: FontWeight.w500),)),
                 ElevatedButton(
                   style: ButtonStyle(
                     shape: WidgetStateProperty.all(
@@ -149,29 +188,20 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                   onPressed: !RegExp(r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+").hasMatch(_emailController.text) || _passwordController.text.length < 6 ? null : () async {
-                    model.signInWithEmailAndPassword(
-                        email: _emailController.text, 
-                        password: _passwordController.text, 
-                        context: context,
-                        onSuccess: () async {
-                          //1 провереть, есть ли в firestore пользователь с таким номером телефона
-                          bool userExists = await model.checkIfUserExists();
-                          if(userExists) {
-                            await model.getUserDataFromFirestore(); 
-                            // * сохранить данные пользователя в shared preferences / provi
-                            await model.saveUserData();
-                            //перейти на экран home screen
-                            // ignore: use_build_context_synchronously
-                            Navigator.pushNamedAndRemoveUntil(context, Constants.homeScreen, (route) => false); 
-                          } else {
-                            // ignore: use_build_context_synchronously
-                            Navigator.pushNamed(context, Constants.userInformationScreen);
-                          }                   
-                        }
-                      );
+                    bool userExists = await model.checkIfUserExists();
+                    if(userExists){
+                      // ignore: use_build_context_synchronously
+                      Navigator.pushNamedAndRemoveUntil(context, Constants.homeScreen, (route) => false);
+                    } else {
+                      final otp = model.generateOTP();
+                      model.saveOTPToSharedPrefernce(otp);
+                      // ignore: use_build_context_synchronously
+                      model.sendCodeEmail(email: _emailController.text, password: _passwordController.text, otp: otp, context: context);
+                    }
+                    
                   },
                   child: const Text(
-                    "Войти"
+                    "Зареегистрироваться",
                   ),
                 )
               ],

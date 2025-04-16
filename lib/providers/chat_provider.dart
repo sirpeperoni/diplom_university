@@ -6,17 +6,19 @@ import 'package:chat_app_diplom/entity/message_model.dart';
 import 'package:chat_app_diplom/entity/message_reply_model.dart';
 import 'package:chat_app_diplom/entity/user_model.dart';
 import 'package:chat_app_diplom/enums/enums.dart';
+import 'package:chat_app_diplom/repositories/chat_repository.dart';
 import 'package:chat_app_diplom/utilities/global_methods.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:dio/dio.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
 
 class ChatProvider extends ChangeNotifier {
   bool _isLoading = false;
+  final ChatRepository _repository;
+  ChatProvider(this._repository);
   MessageReplyModel? messageReplyModel;
-  final dio = Dio();
+
 
   bool get isLoading => _isLoading;
 
@@ -25,9 +27,6 @@ class ChatProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-
-  final FirebaseStorage _storage = FirebaseStorage.instance;
 
   // set message reply model
   void setMessageReplyModel(MessageReplyModel? messageReply){
@@ -206,40 +205,14 @@ class ChatProvider extends ChangeNotifier {
         contactName: messageModel.senderName,
         contactImage: messageModel.senderImage,
       );
-      // 3. send message to sender firestore location
-      await _firestore
-          .collection(Constants.users)
-          .doc(messageModel.senderUID)
-          .collection(Constants.chats)
-          .doc(contactUID)
-          .collection(Constants.messages)
-          .doc(messageModel.messageId)
-          .set(messageModel.toMap());
-      // 4. send message to contact firestore location
-      await _firestore
-          .collection(Constants.users)
-          .doc(contactUID)
-          .collection(Constants.chats)
-          .doc(messageModel.senderUID)
-          .collection(Constants.messages)
-          .doc(messageModel.messageId)
-          .set(contactMessageModel.toMap());
 
-      // 5. send the last message to sender firestore location
-      await _firestore
-          .collection(Constants.users)
-          .doc(messageModel.senderUID)
-          .collection(Constants.chats)
-          .doc(contactUID)
-          .set(senderLastMessage.toMap());
-
-      // 6. send the last message to contact firestore location
-      await _firestore
-          .collection(Constants.users)
-          .doc(contactUID)
-          .collection(Constants.chats)
-          .doc(messageModel.senderUID)
-          .set(contactLastMessage.toMap());
+      await _repository.saveMessages(
+        messageModel: messageModel,
+        contactMessageModel: contactMessageModel,
+        senderLastMessage: senderLastMessage,
+        contactLastMessage: contactLastMessage,
+        contactUID: contactUID
+      );
       // 7.call onSucess
       // set loading to false
       setLoading(false);
@@ -256,26 +229,14 @@ class ChatProvider extends ChangeNotifier {
   }
 
     // stream the unread messages for this user
-  Stream<int> getUnreadMessagesStream({
+  Stream<int> getUnreadMessagesCount({
     required String userId,
     required String contactUID,
   }) {
-
-      // handle contact message
-      return _firestore
-        .collection(Constants.users)
-        .doc(userId)
-        .collection(Constants.chats)
-        .doc(contactUID)
-        .collection(Constants.messages)
-        .where(Constants.isSeen, isEqualTo: false)
-        .snapshots()
-        .map((event) {
-          final a = event.docs.where((element) {
-            return element.data()[Constants.senderUID] != userId;
-          }).toList();
-          return a.length;
-        });
+    return _repository.getUnreadMessagesCount(
+      userId: userId,
+      contactUID: contactUID,
+    );
   }
 
   // set message status
@@ -285,58 +246,18 @@ class ChatProvider extends ChangeNotifier {
     required String messageId,
   }) async {
 
-      // handle contact message
-      // 2. update the current message as seen
-      await _firestore
-          .collection(Constants.users)
-          .doc(currentUserId)
-          .collection(Constants.chats)
-          .doc(contactUID)
-          .collection(Constants.messages)
-          .doc(messageId)
-          .update({Constants.isSeen: true});
-      // 3. update the contact message as seen
-      await _firestore
-          .collection(Constants.users)
-          .doc(contactUID)
-          .collection(Constants.chats)
-          .doc(currentUserId)
-          .collection(Constants.messages)
-          .doc(messageId)
-          .update({Constants.isSeen: true});
-
-      // 4. update the last message as seen for current user
-      await _firestore
-          .collection(Constants.users)
-          .doc(currentUserId)
-          .collection(Constants.chats)
-          .doc(contactUID)
-          .update({Constants.isSeen: true});
-
-      // 5. update the last message as seen for contact
-      await _firestore
-          .collection(Constants.users)
-          .doc(contactUID)
-          .collection(Constants.chats)
-          .doc(currentUserId)
-          .update({Constants.isSeen: true});
+      _repository.setMessageStatus(
+        currentUserId: currentUserId,
+        contactUID: contactUID,
+        messageId: messageId,
+      );
   }
   
 
 
   //get chatslist stream
   Stream<List<LastMessageModel>> getChatsListStream(String userId) {
-    return _firestore
-      .collection(Constants.users)
-      .doc(userId)
-      .collection(Constants.chats)
-      .orderBy(Constants.timeSent, descending: true)
-      .snapshots()
-      .map((snapshot) {
-        return snapshot.docs.map((doc) {
-          return LastMessageModel.fromMap(doc.data());
-      }).toList();
-    });
+    return _repository.getChatsListStream(userId);
   }
 
 
@@ -346,19 +267,10 @@ class ChatProvider extends ChangeNotifier {
     required String contactUID,
   }) {
       // handle contact message
-      return _firestore
-        .collection(Constants.users)
-        .doc(userId)
-        .collection(Constants.chats)
-        .doc(contactUID)
-        .collection(Constants.messages)
-        //.orderBy(Constants.timeSent, descending: false)
-        .snapshots()
-        .map((snapshot) {
-        return snapshot.docs.map((doc) {
-            return MessageModel.fromMap(doc.data());
-          }).toList();
-        });
+      return _repository.getMessagesStream(
+        userId: userId,
+        contactUID: contactUID,
+      );
     }
 }
 

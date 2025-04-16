@@ -18,9 +18,6 @@ class _SerchUsersPageState extends State<SerchUsersPage> {
   Widget build(BuildContext context) {
     final uid = context.watch<AuthenticationProvider>().userModel!.uid;
     final model = context.watch<AuthenticationProvider>();
-    initState(){
-      super.initState();
-    }
     return  Scaffold(
       appBar: AppBar(
         title: const Text('Поиск'),

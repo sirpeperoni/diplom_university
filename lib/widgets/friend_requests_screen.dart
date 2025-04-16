@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print
+
 import 'package:chat_app_diplom/enums/enums.dart';
 import 'package:chat_app_diplom/widgets/app_bar_back_buttons.dart';
 import 'package:chat_app_diplom/widgets/friends_list.dart';
@@ -38,7 +40,7 @@ class _FriendRequestScreenState extends State<FriendRequestScreen> {
               },
             ),
 
-            Expanded(
+            const Expanded(
                 child: FriendsList(
               viewType: FriendViewType.friendRequests,
             )),

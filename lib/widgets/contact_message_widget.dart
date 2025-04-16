@@ -14,7 +14,7 @@ class ContactMessageWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final time = formatDate(message.timeSent, [hh, ':', nn, ' ']);
     final isReplying = message.repliedTo.isNotEmpty;
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    //final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return SwipeTo(
       onLeftSwipe: (details) {
         onLeftSwipe();

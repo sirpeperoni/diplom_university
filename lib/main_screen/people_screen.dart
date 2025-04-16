@@ -2,7 +2,6 @@ import 'package:chat_app_diplom/constants.dart';
 import 'package:chat_app_diplom/entity/user_model.dart';
 import 'package:chat_app_diplom/enums/enums.dart';
 import 'package:chat_app_diplom/providers/auth_provider.dart';
-import 'package:chat_app_diplom/utilities/global_methods.dart';
 import 'package:chat_app_diplom/widgets/friend_widget.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
@@ -28,7 +27,7 @@ class _PeopleScreenState extends State<PeopleScreen> {
         children: [
           // cupertino search bar
           Padding(
-            padding: EdgeInsets.all(8.0),
+            padding: const EdgeInsets.all(8.0),
             child: CupertinoSearchTextField(
               placeholder: 'Поиск',
               onChanged: (value) {

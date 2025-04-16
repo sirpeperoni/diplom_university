@@ -46,6 +46,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     // get user data from arguments
+    // ignore: non_constant_identifier_names
     final UserPageArguments = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
     final uid = UserPageArguments['UserPage'];
     final currentUid = UserPageArguments['CurrentUserPage'];
@@ -145,8 +146,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   model
                                       .logout()
                                       .whenComplete(() {
+                                    // ignore: use_build_context_synchronously
                                     Navigator.pop(context);
                                     Navigator.pushNamedAndRemoveUntil(
+                                      // ignore: use_build_context_synchronously
                                       context,
                                       Constants.loginScreen,
                                       (route) => false,

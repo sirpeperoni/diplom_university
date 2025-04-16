@@ -1,6 +1,6 @@
 
+import 'package:cached_video_player_plus/cached_video_player_plus.dart';
 import 'package:flutter/material.dart';
-import 'package:video_player/video_player.dart';
 
 class VideoPlayerWidget extends StatefulWidget {
   const VideoPlayerWidget({
@@ -19,13 +19,15 @@ class VideoPlayerWidget extends StatefulWidget {
 }
 
 class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
-  late VideoPlayerController videoPlayerController;
+  late CachedVideoPlayerPlusController  videoPlayerController;
   bool isPlaying = false;
   bool isLoading = true;
 
   @override
   void initState() {
-    videoPlayerController = VideoPlayerController.network(
+
+    // ignore: deprecated_member_use
+    videoPlayerController = CachedVideoPlayerPlusController.network(
       widget.videoUrl,
     )
       ..addListener(() {})
@@ -54,7 +56,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
               ? const Center(
                   child: CircularProgressIndicator(),
                 )
-              : VideoPlayer(videoPlayerController),
+              : CachedVideoPlayerPlus (videoPlayerController),
           Center(
             child: IconButton(
               icon: Icon(

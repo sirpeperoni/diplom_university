@@ -3,7 +3,6 @@ import 'package:chat_app_diplom/entity/user_model.dart';
 import 'package:chat_app_diplom/providers/auth_provider.dart';
 import 'package:chat_app_diplom/utilities/global_methods.dart';
 import 'package:chat_app_diplom/widgets/profile_widgets.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -30,7 +29,6 @@ class InfoDetails extends StatelessWidget {
     final profileName = userModel!.name;
 
     // get group description
-    final aboutMe = userModel!.aboutMe;
     return Padding(
             padding: const EdgeInsets.symmetric(
               horizontal: 10.0,
@@ -59,7 +57,7 @@ class InfoDetails extends StatelessWidget {
                 // display phone number
                 currentUser.uid == userModel!.uid
                     ? Text(
-                        userModel!.phoneNumber,
+                        userModel!.email,
                         style: GoogleFonts.openSans(
                           fontSize: 16,
                           fontWeight: FontWeight.w500,
@@ -105,7 +103,7 @@ class InfoDetails extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Container(
+                    SizedBox(
                       width: MediaQuery.of(context).size.width * 0.75,
                       child: Text(
                         userModel!.aboutMe,
@@ -117,7 +115,7 @@ class InfoDetails extends StatelessWidget {
                       ),
                     ),
                     if(currentUser.uid == userModel!.uid)...{
-                      IconButton(icon: Icon(Icons.edit), onPressed: () {
+                      IconButton(icon: const Icon(Icons.edit), onPressed: () {
                           // navigate to edit profile screen
                           Navigator.of(context).pushNamed(Constants.editAboutMeScreem, arguments: userModel);
                       }),

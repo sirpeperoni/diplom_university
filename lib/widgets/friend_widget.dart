@@ -41,6 +41,7 @@ class FriendWidget extends StatelessWidget {
                       .acceptFriendRequest(friendID: friend.uid)
                       .whenComplete(() {
                     showSnackBar(
+                        // ignore: use_build_context_synchronously
                         context, 'Теперь вы друзья с ${friend.name}');
                   });
               },
