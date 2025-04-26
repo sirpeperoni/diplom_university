@@ -1,3 +1,4 @@
+import 'package:chat_app_diplom/auth/encrtyption_service.dart';
 import 'package:chat_app_diplom/constants.dart';
 import 'package:chat_app_diplom/entity/last_message_model.dart';
 import 'package:chat_app_diplom/providers/auth_provider.dart';
@@ -46,12 +47,21 @@ class _MyChatsScreenState extends State<MyChatsScreen> {
                   }
                   if(snapshot.hasData){
                     final chats = snapshot.data!;
+                    
                     return ListView.builder(
                       itemCount: chats.length,
                       itemBuilder: (context, index) {
                         final chat = chats[index];
+                        String? commonKey = context.read<ChatProvider>().getCommonKey(chat.contactUID);
+
+                        if(commonKey == null) {
+                          context.read<EncryptionService>().createCommomKeyForContact(chat.contactUID, chat.chatId, uid);
+                          commonKey = context.read<ChatProvider>().getCommonKey(chat.contactUID);
+                        }
+
                         return ChatWidget(
                           chat: chat,
+                          commonKey: commonKey!,
                           onTap: () {
                             Navigator.pushNamed(
                               context,
@@ -60,6 +70,8 @@ class _MyChatsScreenState extends State<MyChatsScreen> {
                                 Constants.contactUID: chat.contactUID,
                                 Constants.contactName: chat.contactName,
                                 Constants.contactImage: chat.contactImage,
+                                Constants.chatId: chat.chatId,
+                                Constants.commonKey: commonKey,
                               },
                             );
                           },

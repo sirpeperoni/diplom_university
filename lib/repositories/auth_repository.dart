@@ -102,20 +102,24 @@ class AuthRepository {
     required String email,
     required String password, 
   }) async {
+    var user = AuthResponseModel(
+            isSuccessful: false,
+            email: null,
+            uid: null,
+            errorMessage: null
+    );
     try {
-      _auth.signInWithEmailAndPassword(email: email, password: password)
-        .then((credential) {
-          final user = AuthResponseModel(
+      final credential = await _auth.signInWithEmailAndPassword(email: email, password: password);
+      user = AuthResponseModel(
             isSuccessful: true,
             email: credential.user!.email,
             uid: credential.user!.uid,
             errorMessage: null
           );
-          return user;
-        });
+      return user;
     } on FirebaseAuthException catch (e) {
       if(e.code == 'wrong-password'){
-        final user = AuthResponseModel(
+        user = AuthResponseModel(
             isSuccessful: false,
             email: null,
             uid: null,
@@ -124,7 +128,7 @@ class AuthRepository {
         return user;
       }
       if(e.code == 'user-not-found'){
-        final user = AuthResponseModel(
+        user = AuthResponseModel(
             isSuccessful: false,
             email: null,
             uid: null,
@@ -133,14 +137,9 @@ class AuthRepository {
         return user;
       }
     }
-    final user = AuthResponseModel(
-            isSuccessful: false,
-            email: null,
-            uid: null,
-            errorMessage: null
-    );
     return user;
   }
+
 
 
   Future<AuthResponseModel> registerWithEmailAndPassword({

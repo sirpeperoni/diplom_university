@@ -31,8 +31,16 @@ class SharedPreferencesRepository {
     return false;
   }
 
+  String? getCommonKey( String contactUID) {
+    return _sharedPreferences.getString("commonKey_$contactUID");
+  }
+
   Future clear() async {
     await _sharedPreferences.clear();
+  }
+
+  String? getChatId(contactUID){
+    return _sharedPreferences.getString("chatId_$contactUID");
   }
 
 }

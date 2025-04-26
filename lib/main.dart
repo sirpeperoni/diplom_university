@@ -1,4 +1,5 @@
 import 'package:adaptive_theme/adaptive_theme.dart';
+import 'package:chat_app_diplom/auth/encrtyption_service.dart';
 import 'package:chat_app_diplom/auth/landing_screen.dart';
 import 'package:chat_app_diplom/auth/login_screen.dart';
 import 'package:chat_app_diplom/auth/otp_screen.dart';
@@ -26,11 +27,13 @@ import 'package:dio/dio.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: "api_keys.env");
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
@@ -44,12 +47,13 @@ void main() async {
     Provider<SharedPreferences>(
       create: (context) => sharedPreferences,
     ),
+    Provider(create: (ctx) => EncryptionService(ctx.read<FirebaseFirestore>(), ctx.read<SharedPreferences>())),
     Provider(create: (ctx) => AuthRepository(ctx.read<FirebaseFirestore>(), ctx.read<FirebaseAuth>())),
     Provider(create: (ctx) => ChatRepository(ctx.read<FirebaseFirestore>())),
     Provider(create: (ctx) => EmailRepository(ctx.read<Dio>())),
     Provider(create: (ctx) => SharedPreferencesRepository(ctx.read<SharedPreferences>())),
     ChangeNotifierProvider(create: (ctx) => AuthenticationProvider(ctx.read<AuthRepository>(), ctx.read<SharedPreferencesRepository>(), ctx.read<EmailRepository>())),
-    ChangeNotifierProvider(create: (ctx) => ChatProvider(ctx.read<ChatRepository>())),
+    ChangeNotifierProvider(create: (ctx) => ChatProvider(ctx.read<ChatRepository>(), ctx.read<SharedPreferencesRepository>(), ctx.read<EncryptionService>())),
   ], child: MainApp(savedThemeMode: savedThemeMode)));
 }
 

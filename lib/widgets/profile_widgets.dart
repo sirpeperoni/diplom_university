@@ -1,8 +1,10 @@
 // ignore_for_file: use_build_context_synchronously
 
+import 'package:chat_app_diplom/auth/encrtyption_service.dart';
 import 'package:chat_app_diplom/constants.dart';
 import 'package:chat_app_diplom/entity/user_model.dart';
 import 'package:chat_app_diplom/providers/auth_provider.dart';
+import 'package:chat_app_diplom/providers/chat_provider.dart';
 import 'package:chat_app_diplom/utilities/global_methods.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -246,11 +248,20 @@ class FriendsButton extends StatelessWidget {
                     // navigate to chat screen
                     // navigate to chat screen with the folowing arguments
                     // 1. friend uid 2. friend name 3. friend image 
+                    final commonKey = context.read<ChatProvider>().getCommonKey(userModel.uid);
+                    String? chatId = '';
+                    if(commonKey == null) {
+                      final userID = context.read<AuthenticationProvider>().uid;
+                      context.read<EncryptionService>().createCommomKeyForSender(userModel.uid, userID!);
+                    }
+                    chatId = context.read<ChatProvider>().getChatId(userModel.uid);
                     Navigator.pushNamed(context, Constants.chatScreen,
                         arguments: {
                           Constants.contactUID: userModel.uid,
                           Constants.contactName: userModel.name,
                           Constants.contactImage: userModel.image,
+                          Constants.chatId: chatId,
+                          Constants.commonKey: commonKey,
                         });
                   },
                   label: 'Чат',

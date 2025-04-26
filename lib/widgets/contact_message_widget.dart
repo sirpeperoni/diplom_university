@@ -6,9 +6,10 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:swipe_to/swipe_to.dart';
 
 class ContactMessageWidget extends StatelessWidget {
-  const ContactMessageWidget({super.key, required this.message, required this.onLeftSwipe});
+  const ContactMessageWidget({super.key, required this.message, required this.onLeftSwipe, required this.decryptedMessage});
   final Function() onLeftSwipe;
   final MessageModel message;
+  final String decryptedMessage;
 
   @override
   Widget build(BuildContext context) {
@@ -53,7 +54,7 @@ class ContactMessageWidget extends StatelessWidget {
                                     children: [
                                       DisplayMessageType(
                                         type: message.messageType,
-                                        message: message.message,
+                                        message: decryptedMessage,
                                         overFlow: TextOverflow.ellipsis,
                                         viewOnly: false,
                                         color: Colors.white,
@@ -79,7 +80,7 @@ class ContactMessageWidget extends StatelessWidget {
                         ],
                       DisplayMessageType(
                         type: message.messageType,
-                        message: message.message,
+                        message: decryptedMessage,
                         overFlow: TextOverflow.ellipsis,
                         viewOnly: false,
                         color: Colors.white,

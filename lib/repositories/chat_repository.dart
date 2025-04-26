@@ -15,41 +15,47 @@ class ChatRepository {
     required LastMessageModel contactLastMessage,
     required String contactUID,
   }) async {
-    
+      final batch = _firestore.batch();
      // 3. send message to sender firestore location
-      await _firestore
+      final doc1 = _firestore
           .collection(Constants.users)
           .doc(messageModel.senderUID)
           .collection(Constants.chats)
           .doc(contactUID)
           .collection(Constants.messages)
-          .doc(messageModel.messageId)
-          .set(messageModel.toMap());
+          .doc(messageModel.messageId);
+
+      batch.set(doc1, messageModel.toMap());
       // 4. send message to contact firestore location
-      await _firestore
+      final doc2 = _firestore
           .collection(Constants.users)
           .doc(contactUID)
           .collection(Constants.chats)
           .doc(messageModel.senderUID)
           .collection(Constants.messages)
-          .doc(messageModel.messageId)
-          .set(contactMessageModel.toMap());
+          .doc(messageModel.messageId);
+          
+      batch.set(doc2, contactMessageModel.toMap());
 
       // 5. send the last message to sender firestore location
-      await _firestore
+      final doc3 = _firestore
           .collection(Constants.users)
           .doc(messageModel.senderUID)
           .collection(Constants.chats)
-          .doc(contactUID)
-          .set(senderLastMessage.toMap());
+          .doc(contactUID);
+
+      batch.set(doc3, senderLastMessage.toMap());
 
       // 6. send the last message to contact firestore location
-      await _firestore
+      final doc4 = _firestore
           .collection(Constants.users)
           .doc(contactUID)
           .collection(Constants.chats)
-          .doc(messageModel.senderUID)
-          .set(contactLastMessage.toMap());
+          .doc(messageModel.senderUID);
+
+      batch.set(doc4, contactLastMessage.toMap());
+
+      await batch.commit();
   }
 
   Stream<int> getUnreadMessagesCount({
@@ -75,40 +81,45 @@ class ChatRepository {
     required String messageId,
   }) async {
     // handle contact message
+    final batch = _firestore.batch();
       // 2. update the current message as seen
-      await _firestore
+      final doc1 = _firestore
           .collection(Constants.users)
           .doc(currentUserId)
           .collection(Constants.chats)
           .doc(contactUID)
           .collection(Constants.messages)
-          .doc(messageId)
-          .update({Constants.isSeen: true});
+          .doc(messageId);
+
+      batch.update(doc1, {Constants.isSeen: true});
       // 3. update the contact message as seen
-      await _firestore
+      final doc2 = _firestore
           .collection(Constants.users)
           .doc(contactUID)
           .collection(Constants.chats)
           .doc(currentUserId)
           .collection(Constants.messages)
-          .doc(messageId)
-          .update({Constants.isSeen: true});
+          .doc(messageId);
 
+      batch.update(doc2, {Constants.isSeen: true});
       // 4. update the last message as seen for current user
-      await _firestore
+      final doc3 = _firestore
           .collection(Constants.users)
           .doc(currentUserId)
           .collection(Constants.chats)
-          .doc(contactUID)
-          .update({Constants.isSeen: true});
+          .doc(contactUID);
 
+      batch.update(doc3, {Constants.isSeen: true});
       // 5. update the last message as seen for contact
-      await _firestore
+      final doc4 = _firestore
           .collection(Constants.users)
           .doc(contactUID)
           .collection(Constants.chats)
-          .doc(currentUserId)
-          .update({Constants.isSeen: true});
+          .doc(currentUserId);
+
+      batch.update(doc4, {Constants.isSeen: true});
+
+      await batch.commit();
   }
 
 

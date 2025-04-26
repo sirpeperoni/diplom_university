@@ -1,3 +1,4 @@
+import 'package:chat_app_diplom/auth/encrtyption_service.dart';
 import 'package:chat_app_diplom/entity/message_model.dart';
 import 'package:chat_app_diplom/entity/message_reply_model.dart';
 import 'package:chat_app_diplom/providers/auth_provider.dart';
@@ -92,7 +93,8 @@ class _ChatListState extends State<ChatList> {
                   }
                 final isMe = element.senderUID == uid;
                 final senderUID = element.senderUID;
-                final message = element.message;
+                final msg = element.message;
+                final message = context.read<EncryptionService>().decryptMessage(msg, widget.contactUID);
                 final senderName = element.senderName;
                 final senderImage = element.senderImage;
                 final messageType = element.messageType;
@@ -100,6 +102,7 @@ class _ChatListState extends State<ChatList> {
                   padding: const EdgeInsets.symmetric(vertical: 8.0),
                   child: MyMessageWidget(
                     message: element,
+                    decryptedMessage: message,
                     onLeftSwipe: (){
                       final messageReply = MessageReplyModel(
                         senderUID: senderUID,
@@ -116,6 +119,7 @@ class _ChatListState extends State<ChatList> {
                   padding: const EdgeInsets.symmetric(vertical: 8.0),
                   child: ContactMessageWidget(
                     message: element,
+                    decryptedMessage: message,
                     onLeftSwipe: (){
                       final messageReply = MessageReplyModel(
                         senderUID: senderUID,

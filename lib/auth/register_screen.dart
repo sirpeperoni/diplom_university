@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
 import 'package:provider/provider.dart';
+import 'package:rounded_loading_button_plus/rounded_loading_button.dart';
 
 
 
@@ -29,6 +30,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     final model = context.watch<AuthenticationProvider>();
+    final RoundedLoadingButtonController _btnCodeController = RoundedLoadingButtonController();
     return Scaffold(
       body: SingleChildScrollView(
         child: Center(
@@ -179,31 +181,62 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 TextButton(onPressed: () {
                   Navigator.pushNamed(context, Constants.loginScreen);
                 }, child: Text("Уже есть аккаунт? Войти", style: GoogleFonts.openSans(fontSize: 16, fontWeight: FontWeight.w500),)),
-                ElevatedButton(
-                  style: ButtonStyle(
-                    shape: WidgetStateProperty.all(
-                      RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(5),
+                // ElevatedButton(
+                //   style: ButtonStyle(
+                //     shape: WidgetStateProperty.all(
+                //       RoundedRectangleBorder(
+                //         borderRadius: BorderRadius.circular(5),
+                //       ),
+                //     ),
+                //   ),
+                //   onPressed: !RegExp(r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+").hasMatch(_emailController.text) || _passwordController.text.length < 6 ? null : () async {
+                //     bool userExists = await model.checkIfUserExists();
+                //     if(userExists){
+                //       // ignore: use_build_context_synchronously
+                //       Navigator.pushNamedAndRemoveUntil(context, Constants.homeScreen, (route) => false);
+                //     } else {
+                //       final otp = model.generateOTP();
+                //       model.saveOTPToSharedPrefernce(otp);
+                //       // ignore: use_build_context_synchronously
+                //       model.sendCodeEmail(email: _emailController.text, password: _passwordController.text, otp: otp, context: context);
+                //     }
+                    
+                //   },
+                //   child: const Text(
+                //     "Зарегистрироваться",
+                //   ),
+                // ),
+                SizedBox(
+                    width: double.infinity,
+                    child: RoundedLoadingButton(
+                      controller: _btnCodeController,
+                      onPressed: !RegExp(r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+").hasMatch(_emailController.text) || _passwordController.text.length < 6 ? null : () async {
+                          bool userExists = await model.checkIfUserExists();
+                          if(userExists){
+                            // ignore: use_build_context_synchronously
+                            Navigator.pushNamedAndRemoveUntil(context, Constants.homeScreen, (route) => false);
+                          } else {
+                            final otp = model.generateOTP();
+                            model.saveOTPToSharedPrefernce(otp);
+                            // ignore: use_build_context_synchronously
+                            model.sendCodeEmail(email: _emailController.text, password: _passwordController.text, otp: otp, context: context);
+                          }
+                          
+                      },
+                      successIcon: Icons.check,
+                      successColor: Colors.green,
+                      errorColor: Colors.red,
+                      color: Theme.of(context).primaryColor,
+                      child: const Text(
+                        'Зарегистрироваться',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500
+                        )
                       ),
                     ),
-                  ),
-                  onPressed: !RegExp(r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+").hasMatch(_emailController.text) || _passwordController.text.length < 6 ? null : () async {
-                    bool userExists = await model.checkIfUserExists();
-                    if(userExists){
-                      // ignore: use_build_context_synchronously
-                      Navigator.pushNamedAndRemoveUntil(context, Constants.homeScreen, (route) => false);
-                    } else {
-                      final otp = model.generateOTP();
-                      model.saveOTPToSharedPrefernce(otp);
-                      // ignore: use_build_context_synchronously
-                      model.sendCodeEmail(email: _emailController.text, password: _passwordController.text, otp: otp, context: context);
-                    }
-                    
-                  },
-                  child: const Text(
-                    "Зареегистрироваться",
-                  ),
-                )
+                  )
               ],
             ),
           ),
