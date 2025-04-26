@@ -14,6 +14,9 @@ class UserModel {
   List<String> friendsUIDs;
   List<String> friendRequestsUIDs;
   List<String> sentFriendRequestsUIDs;
+  String g;
+  String p;
+  String publicKey;
   UserModel({
     required this.uid,
     required this.name,
@@ -27,6 +30,9 @@ class UserModel {
     required this.friendsUIDs,
     required this.friendRequestsUIDs,
     required this.sentFriendRequestsUIDs,
+    required this.g,
+    required this.p,
+    required this.publicKey,
   });
 
   factory UserModel.fromMap(Map<String, dynamic> map) {
@@ -43,6 +49,9 @@ class UserModel {
       friendsUIDs: List<String>.from(map[Constants.friendsUIDs] ?? []),
       friendRequestsUIDs: List<String>.from(map[Constants.friendRequestsUIDs] ?? []),
       sentFriendRequestsUIDs: List<String>.from(map[Constants.sentFriendRequestsUIDs] ?? []),
+      g: map[Constants.g],
+      p: map[Constants.p],
+      publicKey: map[Constants.publicKey],
     );
   }
   
@@ -61,6 +70,9 @@ class UserModel {
       Constants.friendsUIDs: friendsUIDs,
       Constants.friendRequestsUIDs: friendRequestsUIDs,
       Constants.sentFriendRequestsUIDs: sentFriendRequestsUIDs,
+      Constants.g: g,
+      Constants.p: p,
+      Constants.publicKey: publicKey
     };
   }
 

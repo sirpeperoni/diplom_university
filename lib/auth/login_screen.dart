@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
 import 'package:provider/provider.dart';
+import 'package:rounded_loading_button_plus/rounded_loading_button.dart';
 
 
 
@@ -28,6 +29,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final model = context.watch<AuthenticationProvider>();
+    final RoundedLoadingButtonController _btnCodeController = RoundedLoadingButtonController();
     return Scaffold(
       body: SingleChildScrollView(
         child: Center(
@@ -140,40 +142,47 @@ class _LoginScreenState extends State<LoginScreen> {
                 TextButton(onPressed: () {
                   Navigator.pushNamed(context, Constants.registerScreen);
                 }, child: Text("Нету аккаунта? Зарегистрироваться", style: GoogleFonts.openSans(fontSize: 16, fontWeight: FontWeight.w500),)),
-                ElevatedButton(
-                  style: ButtonStyle(
-                    shape: WidgetStateProperty.all(
-                      RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(5),
+
+                SizedBox(
+                    width: double.infinity,
+                    child: RoundedLoadingButton(
+                      controller: _btnCodeController,
+                      onPressed: !RegExp(r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+").hasMatch(_emailController.text) || _passwordController.text.length < 6 ? null : () async {
+                        model.signInWithEmailAndPassword(
+                            email: _emailController.text, 
+                            password: _passwordController.text, 
+                            context: context,
+                            onSuccess: () async {
+                              //1 провереть, есть ли в firestore пользователь с таким номером телефона
+                              bool userExists = await model.checkIfUserExists();
+                              if(userExists) {
+                                await model.getUserDataFromFirestore(); 
+                                // * сохранить данные пользователя в shared preferences / provi
+                                await model.saveUserData();
+                                //перейти на экран home screen
+                                // ignore: use_build_context_synchronously
+                                Navigator.pushNamedAndRemoveUntil(context, Constants.homeScreen, (route) => false); 
+                              } else {
+                                // ignore: use_build_context_synchronously
+                                Navigator.pushNamed(context, Constants.userInformationScreen);
+                              }                   
+                            }
+                          );
+                      },
+                      successIcon: Icons.check,
+                      successColor: Colors.green,
+                      errorColor: Colors.red,
+                      color: Theme.of(context).primaryColor,
+                      child: const Text(
+                        'Войти',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500
+                        )
                       ),
                     ),
-                  ),
-                  onPressed: !RegExp(r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+").hasMatch(_emailController.text) || _passwordController.text.length < 6 ? null : () async {
-                    model.signInWithEmailAndPassword(
-                        email: _emailController.text, 
-                        password: _passwordController.text, 
-                        context: context,
-                        onSuccess: () async {
-                          //1 провереть, есть ли в firestore пользователь с таким номером телефона
-                          bool userExists = await model.checkIfUserExists();
-                          if(userExists) {
-                            await model.getUserDataFromFirestore(); 
-                            // * сохранить данные пользователя в shared preferences / provi
-                            await model.saveUserData();
-                            //перейти на экран home screen
-                            // ignore: use_build_context_synchronously
-                            Navigator.pushNamedAndRemoveUntil(context, Constants.homeScreen, (route) => false); 
-                          } else {
-                            // ignore: use_build_context_synchronously
-                            Navigator.pushNamed(context, Constants.userInformationScreen);
-                          }                   
-                        }
-                      );
-                  },
-                  child: const Text(
-                    "Войти"
-                  ),
-                )
+                  )
               ],
             ),
           ),

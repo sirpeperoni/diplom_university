@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:chat_app_diplom/auth/encrtyption_service.dart';
 import 'package:chat_app_diplom/enums/enums.dart';
 import 'package:chat_app_diplom/providers/auth_provider.dart';
 import 'package:chat_app_diplom/providers/chat_provider.dart';
@@ -19,7 +20,9 @@ class BottomChatField extends StatefulWidget {
   
   final String contactImage;
 
-  const BottomChatField({super.key, required this.contactUID, required this.contactName, required this.contactImage});
+  final String chatId;
+
+  const BottomChatField({super.key, required this.contactUID, required this.contactName, required this.contactImage, required this.chatId});
 
   @override
   State<BottomChatField> createState() => _BottomChatFieldState();
@@ -177,7 +180,7 @@ class _BottomChatFieldState extends State<BottomChatField> {
   // send image message to firestore
   void sendFileMessage({
     required MessageEnum messageType,
-  }) {
+  }) async {
     final currentUser = context.read<AuthenticationProvider>().userModel!;
     final chatProvider = context.read<ChatProvider>();
 
@@ -188,6 +191,7 @@ class _BottomChatFieldState extends State<BottomChatField> {
       contactImage: widget.contactImage,
       file: File(filePath),
       messageType: messageType,
+      chatId: widget.chatId,
       onSucess: () {
         _textEditingController.clear();
         _focusNode.unfocus();
@@ -205,17 +209,19 @@ class _BottomChatFieldState extends State<BottomChatField> {
   }
 
   //send text message to firestore
-  void sendTextMessage(){
+  void sendTextMessage() async {
     final currentUser = context.read<AuthenticationProvider>().userModel!;
     final chatProvider = context.read<ChatProvider>();
     final text = _textEditingController.text;
+    final encryptedMessage = await context.read<EncryptionService>().encryptMessage(text, widget.chatId, currentUser.uid, widget.contactUID);
     _textEditingController.clear();
     chatProvider.sendTextMessage(
       sender: currentUser, 
       contactUID: widget.contactUID, 
       contactName: widget.contactName, 
       contactImage: widget.contactImage, 
-      message: text, 
+      message: encryptedMessage, 
+      chatId: widget.chatId,
       messageType: MessageEnum.text, 
       onSucess: (){
         _focusNode.requestFocus();

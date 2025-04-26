@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:chat_app_diplom/auth/encrtyption_service.dart';
 import 'package:chat_app_diplom/constants.dart';
 import 'package:chat_app_diplom/entity/last_message_model.dart';
 import 'package:chat_app_diplom/entity/message_model.dart';
@@ -7,6 +8,7 @@ import 'package:chat_app_diplom/entity/message_reply_model.dart';
 import 'package:chat_app_diplom/entity/user_model.dart';
 import 'package:chat_app_diplom/enums/enums.dart';
 import 'package:chat_app_diplom/repositories/chat_repository.dart';
+import 'package:chat_app_diplom/repositories/shared_preferences_repository.dart';
 import 'package:chat_app_diplom/utilities/global_methods.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -16,7 +18,9 @@ import 'package:uuid/uuid.dart';
 class ChatProvider extends ChangeNotifier {
   bool _isLoading = false;
   final ChatRepository _repository;
-  ChatProvider(this._repository);
+  final SharedPreferencesRepository _sharedPreferencesRepository;
+  final EncryptionService _encryptionService;
+  ChatProvider(this._repository, this._sharedPreferencesRepository, this._encryptionService);
   MessageReplyModel? messageReplyModel;
 
 
@@ -43,6 +47,7 @@ class ChatProvider extends ChangeNotifier {
     required String message,
     required MessageEnum messageType,
     required Function onSucess,
+    required String chatId,
     required Function(String) onError,
   }) async {
     // set loading to true
@@ -88,6 +93,7 @@ class ChatProvider extends ChangeNotifier {
           contactImage: contactImage,
           onSucess: onSucess,
           onError: onError,
+          chatId: chatId
         );
 
         // set message reply model to null
@@ -111,6 +117,7 @@ class ChatProvider extends ChangeNotifier {
     required MessageEnum messageType,
     required Function onSucess,
     required Function(String) onError,
+    required String chatId,
   }) async {
     // set loading to true
     setLoading(true);
@@ -131,14 +138,14 @@ class ChatProvider extends ChangeNotifier {
       final ref =
           '${Constants.chatFiles}/${messageType.name}/${sender.uid}/$contactUID/$messageId';
       List<String> fileUrl = await storeFileToStorage(file: file, reference: ref);
-
+      final encryptedMessage = await _encryptionService.encryptMessage(fileUrl[0], chatId, sender.uid, contactUID);
       // 3. update/set the messagemodel
       final messageModel = MessageModel(
         senderUID: sender.uid,
         senderName: sender.name,
         senderImage: sender.image,
         contactUID: contactUID,
-        message: fileUrl[0],
+        message: encryptedMessage,
         messageType: messageType,
         timeSent: DateTime.now(),
         messageId: messageId,
@@ -161,6 +168,7 @@ class ChatProvider extends ChangeNotifier {
           contactImage: contactImage,
           onSucess: onSucess,
           onError: onError,
+          chatId: chatId
         );
 
         // set message reply model to null
@@ -179,6 +187,7 @@ class ChatProvider extends ChangeNotifier {
     required String contactName,
     required String contactImage,
     required Function onSucess,
+    required String chatId,
     required Function(String p1) onError,
   }) async {
     try {
@@ -197,6 +206,7 @@ class ChatProvider extends ChangeNotifier {
         messageType: messageModel.messageType,
         timeSent: messageModel.timeSent,
         isSeen: false,
+        chatId: chatId
       );
 
       // 2. initialize last message for the contact
@@ -272,6 +282,14 @@ class ChatProvider extends ChangeNotifier {
         contactUID: contactUID,
       );
     }
+
+  String? getCommonKey(String contactUID) {
+    return _sharedPreferencesRepository.getCommonKey(contactUID);
+  }
+
+  String? getChatId(String contactUID) {
+    return _sharedPreferencesRepository.getChatId(contactUID);
+  }
 }
 
 

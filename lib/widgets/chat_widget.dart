@@ -1,4 +1,5 @@
 
+import 'package:chat_app_diplom/auth/encrtyption_service.dart';
 import 'package:chat_app_diplom/entity/last_message_model.dart';
 import 'package:chat_app_diplom/providers/auth_provider.dart';
 import 'package:chat_app_diplom/utilities/global_methods.dart';
@@ -11,17 +12,22 @@ class ChatWidget extends StatelessWidget {
   const ChatWidget({
     super.key,
     this.chat,
+    required this.commonKey,
     required this.onTap,
   });
 
   final LastMessageModel? chat;
+  final String commonKey;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final uid = context.read<AuthenticationProvider>().userModel!.uid;
+    // get the contactUID
+    final contactUID = chat!.contactUID;
     // get the last message
-    final lastMessage = chat!.message;
+    final lastMessage = context.read<EncryptionService>().decryptMessage(chat!.message, contactUID);
+
     // get the senderUID
     final senderUID = chat!.senderUID;
 
@@ -35,8 +41,7 @@ class ChatWidget extends StatelessWidget {
     // get the name
     final name = chat!.contactName;
 
-    // get the contactUID
-    final contactUID = chat!.contactUID;
+    
     // get the messageType
     final messageType = chat!.messageType;
     return ListTile(

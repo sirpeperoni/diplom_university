@@ -257,7 +257,7 @@ class AuthenticationProvider extends ChangeNotifier {
     _authRepository.logout();
     _uid = null;
     _email = null;
-    _sharedPreferencesRepository.clear();
+    //_sharedPreferencesRepository.clear();
     notifyListeners();
   }
 

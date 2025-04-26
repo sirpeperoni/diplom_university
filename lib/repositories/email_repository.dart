@@ -1,6 +1,6 @@
-import 'package:chat_app_diplom/email_api_key.dart';
 import 'package:chat_app_diplom/entity/email_data.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class EmailRepository {
   final Dio _dio;
@@ -13,7 +13,7 @@ class EmailRepository {
       data: emailData.toJson(),
       options: Options(headers: {
         'Content-Type': 'application/json',
-        'X-API-KEY': email_api_key
+        'X-API-KEY': dotenv.env['API_KEY_EMAIL']!
       }),
     );
 

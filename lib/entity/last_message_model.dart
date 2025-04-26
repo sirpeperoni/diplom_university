@@ -10,6 +10,7 @@ class LastMessageModel {
   MessageEnum messageType;
   DateTime timeSent;
   bool isSeen;
+  String chatId;
 
   LastMessageModel({
     required this.senderUID,
@@ -20,6 +21,7 @@ class LastMessageModel {
     required this.messageType,
     required this.timeSent,
     required this.isSeen,
+    required this.chatId,
   });
 
   // to map
@@ -33,6 +35,7 @@ class LastMessageModel {
       Constants.messageType: messageType.name,
       Constants.timeSent: timeSent.microsecondsSinceEpoch,
       Constants.isSeen: isSeen,
+      Constants.chatId: chatId
     };
   }
 
@@ -47,6 +50,7 @@ class LastMessageModel {
       messageType: map[Constants.messageType].toString().toMessageEnum(),
       timeSent: DateTime.fromMicrosecondsSinceEpoch(map[Constants.timeSent]),
       isSeen: map[Constants.isSeen] ?? false,
+      chatId: map[Constants.chatId] ?? '',
     );
   }
 
@@ -64,6 +68,7 @@ class LastMessageModel {
       messageType: messageType,
       timeSent: timeSent,
       isSeen: isSeen,
+      chatId: chatId,
     );
   }
 }

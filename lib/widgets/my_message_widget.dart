@@ -6,8 +6,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:swipe_to/swipe_to.dart';
 
 class MyMessageWidget extends StatelessWidget {
-  const MyMessageWidget({super.key, required this.message, required this.onLeftSwipe});
+  const MyMessageWidget({super.key, required this.message, required this.onLeftSwipe, required this.decryptedMessage});
   final MessageModel message;
+  final decryptedMessage;
   final Function() onLeftSwipe;
   @override
   Widget build(BuildContext context) {
@@ -55,7 +56,7 @@ class MyMessageWidget extends StatelessWidget {
                                     ),),
                                     DisplayMessageType(
                                       type: message.messageType,
-                                      message: message.message,
+                                      message: decryptedMessage,
                                       overFlow: TextOverflow.ellipsis,
                                       viewOnly: true,
                                       color: Colors.white,
@@ -76,7 +77,7 @@ class MyMessageWidget extends StatelessWidget {
                       ],
                       DisplayMessageType(
                         type: message.messageType,
-                        message: message.message,
+                        message: decryptedMessage,
                         overFlow: TextOverflow.ellipsis,
                         viewOnly: false,
                         color: Colors.white,

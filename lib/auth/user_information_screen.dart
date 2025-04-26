@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:chat_app_diplom/auth/encrtyption_service.dart';
 import 'package:chat_app_diplom/constants.dart';
 import 'package:chat_app_diplom/entity/user_model.dart';
 import 'package:chat_app_diplom/providers/auth_provider.dart';
@@ -126,7 +127,12 @@ class _UserInformationScreenState extends State<UserInformationScreen> {
                       return;
                     }
                     if(_nameController.text.isNotEmpty && finalFileImage != null) {
-                      saveUserDataToFireStore();
+                      final uid = context.read<AuthenticationProvider>().uid!;
+                      final json = await context.read<EncryptionService>().generateDHKeys(uid);
+                      final g = json?[Constants.g];
+                      final p = json?[Constants.p];
+                      final publicKey = json?[Constants.publicKey];
+                      saveUserDataToFireStore(g!, p!, publicKey!);
                     } else {
                       showSnackBar(context, 'Заполните все поля');
                       _btnCodeController.reset();
@@ -155,7 +161,7 @@ class _UserInformationScreenState extends State<UserInformationScreen> {
   }
   
   //save user data to firestore
-  void saveUserDataToFireStore() async {
+  void saveUserDataToFireStore(String g, String p, String publicKey) async {
     final model = context.read<AuthenticationProvider>();
 
     UserModel userModel = UserModel(
@@ -171,6 +177,9 @@ class _UserInformationScreenState extends State<UserInformationScreen> {
       friendsUIDs: [],
       friendRequestsUIDs: [],
       sentFriendRequestsUIDs: [],
+      g: g,
+      p: p,
+      publicKey: publicKey
     );
 
     model.saveUserDataToFireStore(

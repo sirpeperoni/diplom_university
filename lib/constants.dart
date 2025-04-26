@@ -35,6 +35,16 @@ class Constants {
   static const String friendsUIDs = 'friendsUIDs';
   static const String friendRequestsUIDs = 'friendRequestsUIDs';
   static const String sentFriendRequestsUIDs = 'sentFriendRequestsUIDs';
+  static const String iv = 'iv';
+  static const String g = 'g';
+  static const String p = 'p';
+  static const String publicKey = 'publicKey';
+  static const String keyReceived = 'keyReceived';
+  static const String uiWhoContactAtTheBegining = 'uiWhoContactAtTheBegining';
+  static const String uiWhoStartChat = 'uiWhoStartChat';
+  static const String chatId = 'chatId';
+  static const String commonKey = 'commonKey';
+
 
   static const String verificationId = 'verificationId';
 
