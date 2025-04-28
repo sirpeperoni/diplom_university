@@ -29,7 +29,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final model = context.watch<AuthenticationProvider>();
-    final RoundedLoadingButtonController _btnCodeController = RoundedLoadingButtonController();
+    final RoundedLoadingButtonController btnCodeController = RoundedLoadingButtonController();
     return Scaffold(
       body: SingleChildScrollView(
         child: Center(
@@ -146,7 +146,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 SizedBox(
                     width: double.infinity,
                     child: RoundedLoadingButton(
-                      controller: _btnCodeController,
+                      controller: btnCodeController,
                       onPressed: !RegExp(r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+").hasMatch(_emailController.text) || _passwordController.text.length < 6 ? null : () async {
                         model.signInWithEmailAndPassword(
                             email: _emailController.text, 

@@ -7,6 +7,8 @@ class MessageReplyModel {
   final String senderUID;
   final String senderName;
   final String senderImage;
+  final String chatId;
+  final String contactId;
   final MessageEnum messageType;
   final bool isMe;
 
@@ -17,6 +19,8 @@ class MessageReplyModel {
     required this.senderImage,
     required this.messageType,
     required this.isMe,
+    required this.chatId,
+    required this.contactId,
   });
 
   // to map
@@ -28,6 +32,8 @@ class MessageReplyModel {
       Constants.senderImage: senderImage,
       Constants.messageType: messageType.name,
       Constants.isMe: isMe,
+      Constants.chatId: chatId,
+      Constants.contactUID: contactId,
     };
   }
 
@@ -40,6 +46,8 @@ class MessageReplyModel {
       senderImage: map[Constants.senderImage] ?? '',
       messageType: map[Constants.messageType].toString().toMessageEnum(),
       isMe: map[Constants.isMe] ?? false,
+      chatId: map[Constants.chatId] ?? '',
+      contactId: map[Constants.contactUID] ?? '',
     );
   }
 }

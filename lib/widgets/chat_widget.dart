@@ -1,8 +1,11 @@
 
 import 'package:chat_app_diplom/auth/encrtyption_service.dart';
+import 'package:chat_app_diplom/constants.dart';
 import 'package:chat_app_diplom/entity/last_message_model.dart';
 import 'package:chat_app_diplom/providers/auth_provider.dart';
+import 'package:chat_app_diplom/providers/chat_provider.dart';
 import 'package:chat_app_diplom/utilities/global_methods.dart';
+import 'package:chat_app_diplom/widgets/blank_message_widget.dart';
 import 'package:chat_app_diplom/widgets/unread_message_counter.dart';
 import 'package:date_format/date_format.dart';
 import 'package:flutter/material.dart';
@@ -12,21 +15,20 @@ class ChatWidget extends StatelessWidget {
   const ChatWidget({
     super.key,
     this.chat,
-    required this.commonKey,
     required this.onTap,
+    required this.chatId
   });
 
   final LastMessageModel? chat;
-  final String commonKey;
   final VoidCallback onTap;
-
+  final String chatId;
   @override
   Widget build(BuildContext context) {
     final uid = context.read<AuthenticationProvider>().userModel!.uid;
     // get the contactUID
     final contactUID = chat!.contactUID;
     // get the last message
-    final lastMessage = context.read<EncryptionService>().decryptMessage(chat!.message, contactUID);
+
 
     // get the senderUID
     final senderUID = chat!.senderUID;
@@ -61,9 +63,17 @@ class ChatWidget extends StatelessWidget {
                 )
               : const SizedBox(),
           const SizedBox(width: 5),
-          messageToShow(
-            type: messageType,
-            message: lastMessage,
+          FutureBuilder(
+            future: context.read<ChatProvider>().decryptMessage(chat!.message, contactUID, chatId, uid),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const BlankMessageWidget();
+              }
+              return messageToShow(
+                type: messageType,
+                message: snapshot.data ?? '',
+              );
+            }
           ),
         ],
       ),

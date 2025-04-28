@@ -213,7 +213,7 @@ class _BottomChatFieldState extends State<BottomChatField> {
     final currentUser = context.read<AuthenticationProvider>().userModel!;
     final chatProvider = context.read<ChatProvider>();
     final text = _textEditingController.text;
-    final encryptedMessage = await context.read<EncryptionService>().encryptMessage(text, widget.chatId, currentUser.uid, widget.contactUID);
+    final encryptedMessage = await context.read<ChatProvider>().encryptMessage(text, widget.chatId, currentUser.uid, widget.contactUID);
     _textEditingController.clear();
     chatProvider.sendTextMessage(
       sender: currentUser, 

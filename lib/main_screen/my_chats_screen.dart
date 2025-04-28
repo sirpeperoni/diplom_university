@@ -52,16 +52,16 @@ class _MyChatsScreenState extends State<MyChatsScreen> {
                       itemCount: chats.length,
                       itemBuilder: (context, index) {
                         final chat = chats[index];
-                        String? commonKey = context.read<ChatProvider>().getCommonKey(chat.contactUID);
+                        //String? commonKey = context.read<ChatProvider>().getCommonKey(chat.contactUID);
 
-                        if(commonKey == null) {
-                          context.read<EncryptionService>().createCommomKeyForContact(chat.contactUID, chat.chatId, uid);
-                          commonKey = context.read<ChatProvider>().getCommonKey(chat.contactUID);
-                        }
+                        // if(commonKey == null) {
+                        //   context.read<EncryptionService>().createCommomKeyForContact(chat.contactUID, chat.chatId, uid);
+                        //   commonKey = context.read<ChatProvider>().getCommonKey(chat.contactUID);
+                        // }
 
                         return ChatWidget(
                           chat: chat,
-                          commonKey: commonKey!,
+                          chatId:  chat.chatId,
                           onTap: () {
                             Navigator.pushNamed(
                               context,
@@ -71,7 +71,6 @@ class _MyChatsScreenState extends State<MyChatsScreen> {
                                 Constants.contactName: chat.contactName,
                                 Constants.contactImage: chat.contactImage,
                                 Constants.chatId: chat.chatId,
-                                Constants.commonKey: commonKey,
                               },
                             );
                           },

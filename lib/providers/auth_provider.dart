@@ -224,8 +224,8 @@ class AuthenticationProvider extends ChangeNotifier {
     notifyListeners();
     if (fileImage != null) {
       // upload image to storage
-      List<String> imageUrl = await storeFileToStorage(file: fileImage, reference:'${Constants.userImages}/${userModel.uid}');
-      userModel.image = imageUrl[0];
+      String imageUrl = await storeFileToStorage(file: fileImage, reference:'${Constants.userImages}/${userModel.uid}');
+      userModel.image = imageUrl;
     }
     userModel.lastSeen = DateTime.now().microsecondsSinceEpoch.toString();
     userModel.createdAt = DateTime.now().microsecondsSinceEpoch.toString();

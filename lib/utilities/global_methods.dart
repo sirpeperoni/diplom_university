@@ -40,17 +40,18 @@ Widget userImageWidget(
 }
 
 // store file to storage and return file url
-Future<List<String>> storeFileToStorage({
+Future<String> storeFileToStorage({
   required File file,
   required String reference,
 }) async {
   UploadTask uploadTask =
       FirebaseStorage.instance.ref().child(reference).putFile(file);
+  
   TaskSnapshot taskSnapshot = await uploadTask;
   String fileUrl = await taskSnapshot.ref.getDownloadURL();
   FullMetadata metadata = await taskSnapshot.ref.getMetadata();
   String? extension = metadata.contentType;
-  return [fileUrl, extension!];
+  return fileUrl;
 }
 
 Widget messageToShow({required MessageEnum? type, required String message}) {
@@ -92,6 +93,18 @@ Widget messageToShow({required MessageEnum? type, required String message}) {
           SizedBox(width: 10),
           Text(
             'Аудио',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      );
+    case MessageEnum.file:
+    return const Row(
+        children: [
+          Icon(Icons.file_present_outlined),
+          SizedBox(width: 10),
+          Text(
+            'Файл',
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),

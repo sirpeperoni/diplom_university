@@ -14,36 +14,44 @@ class EncryptionService {
   EncryptionService(this._firestore, this._preferences);// Инициализируем Encrypter
   
   Future<String> encryptMessage(String text, String chatId, String uid, String contactUID) async {
-    final secretKey = _preferences.getString("commonKey_$contactUID");
+    var secretKey = _preferences.getString("commonKey_$contactUID");
+
+    secretKey ??= await getCommonKey(chatId, uid, contactUID);
+
+    final encrypter = Encrypter(AES(Key.fromUtf8(secretKey.substring(0, 32))));
+    final iv = IV.fromSecureRandom(16); // Новый IV при каждом шифровании
+    return "${iv.base64}|${encrypter.encrypt(text, iv: iv).base64}";
+  }
+  
+  Future<String> getCommonKey(String chatId, String uid, String contactUID) async {
     final doc = await _firestore
       .collection(Constants.keyReceived)
       .doc(chatId)
       .get();
     
     final snapshot = doc.data();
-
     final p = BigInt.parse(snapshot!["p"]);
-    final g = BigInt.parse(snapshot!["g"]);
-    final A = BigInt.parse(snapshot!["publicKey"]);
-    
+    final A = BigInt.parse(snapshot["publicKey"]);
+    print(p);
     final b = _preferences.getString("privateKey_$uid");
+    final sharedSecret = A.modPow(BigInt.parse(b!), p);
+    _preferences
+      ..setString("p_$contactUID", snapshot["p"])
+      ..setString("A_$contactUID", snapshot["publicKey"])
+      ..setString("commonKey_$contactUID", sharedSecret.toString());
 
-    final B = g.modPow(BigInt.parse(b!), p); // Публичный ключ A
-    final sharedSecret = A.modPow(BigInt.parse(b), p);
-    final f = Key.fromUtf8(secretKey!);
-    final tr = BigInt.parse(secretKey!);
-    final _encrypter = Encrypter(AES(Key.fromUtf8(secretKey.substring(0, 32)!)));
-    final iv = IV.fromSecureRandom(16); // Новый IV при каждом шифровании
-    return "${iv.base64}|${_encrypter.encrypt(text, iv: iv).base64}";
+    return sharedSecret.toString();
   }
-  
-  String decryptMessage(String encryptedData,  String contactUID) {
-    final secretKey = _preferences.getString("commonKey_$contactUID");
-    final _encrypter = Encrypter(AES(Key.fromUtf8(secretKey!.substring(0, 32)!)));
+
+  Future<String> decryptMessage(String encryptedData,  String contactUID, String chatId,String uid) async {
+    var secretKey = _preferences.getString("commonKey_$contactUID");
+    print(secretKey);
+    secretKey ??= await getCommonKey(chatId, uid, contactUID);
+    final encrypter = Encrypter(AES(Key.fromUtf8(secretKey!.substring(0, 32))));
     final parts = encryptedData.split("|");
     final iv = IV.fromBase64(parts[0]);
     final encrypted = Encrypted.fromBase64(parts[1]);
-    return _encrypter.decrypt(encrypted, iv: iv);
+    return encrypter.decrypt(encrypted, iv: iv);
   }
 
   BigInt _generateRandomBigInt(int bitLength) {
@@ -108,8 +116,8 @@ class EncryptionService {
     final batch = _firestore.batch();
 
     _preferences.setString("chatId_$contactUID", chatId);
-    final a = _preferences.getString("chatId_$contactUID");
-    final sender = await _firestore
+
+    final sender = _firestore
           .collection(Constants.users)
           .doc(userID)
           .collection(Constants.chats)
@@ -117,7 +125,7 @@ class EncryptionService {
     
     batch.set(sender, {"chatId": chatId});
 
-    final contact = await _firestore
+    final contact = _firestore
           .collection(Constants.users)
           .doc(contactUID)
           .collection(Constants.chats)
@@ -135,14 +143,14 @@ class EncryptionService {
     final snapshot = doc.data();
 
     final p = BigInt.parse(snapshot!["p"]);
-    final g = BigInt.parse(snapshot!["g"]);
-    final A = BigInt.parse(snapshot!["publicKey"]);
+    final g = BigInt.parse(snapshot["g"]);
+    final A = BigInt.parse(snapshot["publicKey"]);
     
     final b = _preferences.getString("privateKey_$userID");
 
-    final B = g.modPow(BigInt.parse(b!), p); // Публичный ключ A
+    final B = g.modPow(BigInt.parse(b!), p); // Публичный ключ Sender
 
-    final key = await _firestore
+    final key = _firestore
       .collection(Constants.keyReceived)
       .doc(chatId);
 
@@ -161,29 +169,36 @@ class EncryptionService {
     print("Устройство A: Общий секрет = $sharedSecret");
   }
 
-  Future<void> createCommomKeyForContact(String contactUID, String chatId, String? uid) async {
-    final keyReceived = await _firestore
-      .collection(Constants.keyReceived)
-      .doc(chatId)
-      .get();
+  // Future<void> createCommomKeyForContact(String contactUID, String chatId, String? uid) async {
+  //   final keyReceived = await _firestore
+  //     .collection(Constants.keyReceived)
+  //     .doc(chatId)
+  //     .get();
     
-    _preferences.setString("chatId_$contactUID", chatId);
+  //   _preferences.setString("chatId_$contactUID", chatId);
 
-    final snapshot = keyReceived.data();
-    final snapshotKeyReceived = keyReceived.data();
+  //   final snapshot = keyReceived.data();
+  //   final snapshotKeyReceived = keyReceived.data();
 
-    final p = BigInt.parse(snapshot!["p"]);
-    final g = BigInt.parse(snapshot!["g"]);
+  //   final p = BigInt.parse(snapshot!["p"]);
+  //   final g = BigInt.parse(snapshot["g"]);
 
-    final B = BigInt.parse(snapshotKeyReceived!['publicKey']);
+  //   final B = BigInt.parse(snapshotKeyReceived!['publicKey']);
 
-    final a = _preferences.getString("privateKey_$uid");
+  //   final a = _preferences.getString("privateKey_$uid");
 
-    final sharedSecret = B.modPow(BigInt.parse(a!), p);
-    _preferences.setString("commonKey_$contactUID", sharedSecret.toString());
+  //   final sharedSecret = B.modPow(BigInt.parse(a!), p);
 
-    print("Устройство B: Общий секрет = $sharedSecret");
-  }
+
+
+  //   _preferences
+  //     ..setString("commonKey_$contactUID", sharedSecret.toString())
+  //     ..setString("p_$contactUID", p.toString())
+  //     ..setString("g_$contactUID", g.toString())
+  //     ..setString("A_$contactUID", B.toString());
+
+  //   print("Устройство B: Общий секрет = $sharedSecret");
+  // }
 
   
   

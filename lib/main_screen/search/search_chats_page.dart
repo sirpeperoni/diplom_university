@@ -1,6 +1,8 @@
+import 'package:chat_app_diplom/auth/encrtyption_service.dart';
 import 'package:chat_app_diplom/constants.dart';
 import 'package:chat_app_diplom/entity/last_message_model.dart';
 import 'package:chat_app_diplom/providers/auth_provider.dart';
+import 'package:chat_app_diplom/providers/chat_provider.dart';
 import 'package:chat_app_diplom/utilities/global_methods.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -59,29 +61,38 @@ class _SerchChatsPageState extends State<SerchChatsPage> {
                       itemCount: users.length,
                       itemBuilder: (context, index) {
                         final user = users[index];
-                        return InkWell(
-                          onTap: () {
-                            Navigator.pushNamed(context, Constants.chatScreen, arguments: {
-                                  Constants.contactUID: user.contactUID,
-                                  Constants.contactName: user.contactName,
-                                  Constants.contactImage: user.contactImage,
-                            });
-                          },
-                          child: Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Row(
-                              children: [
-                                userImageWidget(imageUrl: user.contactImage, radius: 24, onTap: () {}),
-                                const SizedBox(width: 16,),
-                                Column(
+                        return FutureBuilder(
+                          future: context.read<ChatProvider>().decryptMessage(user.message, user.contactUID, user.chatId, uid),
+                          builder: (context, snapshot) {
+                            if (snapshot.connectionState == ConnectionState.waiting) {
+                              return CircularProgressIndicator();
+                            }
+                            return InkWell(
+                              onTap: () {
+                                Navigator.pushNamed(context, Constants.chatScreen, arguments: {
+                                      Constants.contactUID: user.contactUID,
+                                      Constants.contactName: user.contactName,
+                                      Constants.contactImage: user.contactImage,
+                                      Constants.chatId: user.chatId,
+                                });
+                              },
+                              child: Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Row(
                                   children: [
-                                    Text(user.contactName),
-                                    messageToShow(type: user.messageType, message: user.message),
+                                    userImageWidget(imageUrl: user.contactImage, radius: 24, onTap: () {}),
+                                    const SizedBox(width: 16,),
+                                    Column(
+                                      children: [
+                                        Text(user.contactName),
+                                        messageToShow(type: user.messageType, message: snapshot.data ?? ''),
+                                      ],
+                                    ),
                                   ],
                                 ),
-                              ],
-                            ),
-                          ),
+                              ),
+                            );
+                          }
                         );
                       }
                     );

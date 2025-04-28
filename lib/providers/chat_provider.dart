@@ -137,8 +137,10 @@ class ChatProvider extends ChangeNotifier {
       // 2. upload file to firebase storage
       final ref =
           '${Constants.chatFiles}/${messageType.name}/${sender.uid}/$contactUID/$messageId';
-      List<String> fileUrl = await storeFileToStorage(file: file, reference: ref);
-      final encryptedMessage = await _encryptionService.encryptMessage(fileUrl[0], chatId, sender.uid, contactUID);
+      String fileUrl = await storeFileToStorage(file: file, reference: ref);
+      String fileName  = file.path.split('/').last;
+      String extension =  fileName .split('.').last;
+      final encryptedMessage = await _encryptionService.encryptMessage(fileUrl, chatId, sender.uid, contactUID);
       // 3. update/set the messagemodel
       final messageModel = MessageModel(
         senderUID: sender.uid,
@@ -156,7 +158,8 @@ class ChatProvider extends ChangeNotifier {
         reactions: [],
         isSeenBy: [sender.uid],
         deletedBy: [],
-        fileType: fileUrl[1],
+        fileType: extension,
+        fileName: fileName 
       );
 
 
@@ -289,6 +292,14 @@ class ChatProvider extends ChangeNotifier {
 
   String? getChatId(String contactUID) {
     return _sharedPreferencesRepository.getChatId(contactUID);
+  }
+
+  Future<String> encryptMessage(String text, String chatId, String uid, String contactUID){
+    return _encryptionService.encryptMessage(text, chatId, uid, contactUID);
+  }
+
+  Future<String> decryptMessage(String encryptedData,  String contactUID, String chatId,String uid) async {
+    return _encryptionService.decryptMessage(encryptedData, contactUID, chatId, uid);
   }
 }
 

@@ -42,6 +42,11 @@ dependencies:
   flutter_dotenv: ^5.2.1
   cryptography: ^2.7.0
   encrypt: ^5.0.3
+  flutter_downloader: ^1.11.8
+  chewie: ^1.10.0
+  wakelock_plus: ^1.3.2
+  flick_video_player: ^0.9.0
+  visibility_detector: ^0.4.0+2
 
 dev_dependencies:
   flutter_test:

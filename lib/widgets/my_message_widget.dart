@@ -1,14 +1,17 @@
+import 'package:chat_app_diplom/auth/encrtyption_service.dart';
 import 'package:chat_app_diplom/entity/message_model.dart';
 import 'package:chat_app_diplom/widgets/display_message_type.dart';
 import 'package:date_format/date_format.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import 'package:swipe_to/swipe_to.dart';
 
 class MyMessageWidget extends StatelessWidget {
   const MyMessageWidget({super.key, required this.message, required this.onLeftSwipe, required this.decryptedMessage});
   final MessageModel message;
-  final decryptedMessage;
+
+  final String decryptedMessage;
   final Function() onLeftSwipe;
   @override
   Widget build(BuildContext context) {
@@ -34,58 +37,50 @@ class MyMessageWidget extends StatelessWidget {
             child: Stack(
               children: [
                 Padding(
-                  padding: const EdgeInsets.only(left: 10, right: 10, top: 5, bottom: 20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if(isReplying) ...[
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).primaryColor.withOpacity(0.2),
-                          ),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(message.senderName, style: GoogleFonts.openSans(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.bold,
-                                    ),),
-                                    DisplayMessageType(
-                                      type: message.messageType,
-                                      message: decryptedMessage,
-                                      overFlow: TextOverflow.ellipsis,
-                                      viewOnly: true,
-                                      color: Colors.white,
-                                      isReply: true,
-                                      extension: message.fileType,
-                                    ),
-                                    Text(
-                                      message.repliedMessage,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ],
-                                ),
+                      padding: const EdgeInsets.only(left: 10, right: 10, top: 5, bottom: 20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if(isReplying) ...[
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: Theme.of(context).primaryColor.withOpacity(0.2),
                               ),
-                            ],
-                          ),
-                        )
-                      ],
-                      DisplayMessageType(
-                        type: message.messageType,
-                        message: decryptedMessage,
-                        overFlow: TextOverflow.ellipsis,
-                        viewOnly: false,
-                        color: Colors.white,
-                        isReply: false,
-                        extension: message.fileType,
-                      )
-                    ],
-                  ),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(message.senderName, style: GoogleFonts.openSans(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.bold,
+                                        ),),
+                                        Text(
+                                              message.repliedMessage,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            )
+                          ],
+                          DisplayMessageType(
+                            type: message.messageType,
+                            fileName: message.fileName,
+                            message: decryptedMessage,
+                            overFlow: TextOverflow.ellipsis,
+                            viewOnly: false,
+                            color: Colors.white,
+                            isReply: false,
+                            extension: message.fileType,
+                          )
+                        ],
+                      ),
                 ),
                 Positioned(
                   bottom: 4,

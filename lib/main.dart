@@ -19,6 +19,7 @@ import 'package:chat_app_diplom/providers/auth_provider.dart';
 import 'package:chat_app_diplom/providers/chat_provider.dart';
 import 'package:chat_app_diplom/repositories/auth_repository.dart';
 import 'package:chat_app_diplom/repositories/chat_repository.dart';
+import 'package:chat_app_diplom/repositories/download_repository.dart';
 import 'package:chat_app_diplom/repositories/email_repository.dart';
 import 'package:chat_app_diplom/repositories/shared_preferences_repository.dart';
 import 'package:chat_app_diplom/widgets/image.dart';
@@ -28,8 +29,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -39,6 +42,10 @@ void main() async {
   );
   final savedThemeMode = await AdaptiveTheme.getThemeMode();
   final sharedPreferences = await SharedPreferences.getInstance();
+  await FlutterDownloader.initialize(
+    debug: true, // optional: set to false to disable printing logs to console (default: true)
+    ignoreSsl: true // option: set to false to disable working with http links (default: false)
+  );
 
   runApp(MultiProvider(providers: [
     Provider(create: (_) => FirebaseAuth.instance),
@@ -52,6 +59,9 @@ void main() async {
     Provider(create: (ctx) => ChatRepository(ctx.read<FirebaseFirestore>())),
     Provider(create: (ctx) => EmailRepository(ctx.read<Dio>())),
     Provider(create: (ctx) => SharedPreferencesRepository(ctx.read<SharedPreferences>())),
+    ChangeNotifierProvider(
+            create: (_) => DownloadRepository(),
+    ),
     ChangeNotifierProvider(create: (ctx) => AuthenticationProvider(ctx.read<AuthRepository>(), ctx.read<SharedPreferencesRepository>(), ctx.read<EmailRepository>())),
     ChangeNotifierProvider(create: (ctx) => ChatProvider(ctx.read<ChatRepository>(), ctx.read<SharedPreferencesRepository>(), ctx.read<EncryptionService>())),
   ], child: MainApp(savedThemeMode: savedThemeMode)));

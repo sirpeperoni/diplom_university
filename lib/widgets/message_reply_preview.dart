@@ -1,5 +1,8 @@
+import 'package:chat_app_diplom/auth/encrtyption_service.dart';
+import 'package:chat_app_diplom/providers/auth_provider.dart';
 import 'package:chat_app_diplom/providers/chat_provider.dart';
 import 'package:chat_app_diplom/utilities/global_methods.dart';
+import 'package:chat_app_diplom/widgets/blank_message_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -13,6 +16,7 @@ class MessageReplyPreview extends StatelessWidget {
       builder: (context, chatProvider, child) {
         final messageReply = chatProvider.messageReplyModel;
         final type = messageReply?.messageType;
+        final uid = context.read<AuthenticationProvider>().uid!;
         return Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
@@ -28,7 +32,15 @@ class MessageReplyPreview extends StatelessWidget {
                       fontSize: 13,
                       fontWeight: FontWeight.bold,
                     ),),
-                    messageToShow(type: type, message: messageReply.message),
+                    FutureBuilder(
+                      future: context.read<ChatProvider>().decryptMessage(messageReply.message, messageReply.contactId, messageReply.chatId, uid),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return const BlankMessageWidget();
+                        }
+                        return messageToShow(type: type, message: snapshot.data ?? '');
+                      }
+                    ),
                   ],
                 ),
               ),

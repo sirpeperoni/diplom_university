@@ -18,6 +18,7 @@ class MessageModel {
   final List<String> isSeenBy;
   final List<String> deletedBy;
   final String? fileType;
+  final String? fileName;
 
   MessageModel({
     required this.senderUID,
@@ -35,6 +36,7 @@ class MessageModel {
     required this.reactions,
     required this.isSeenBy,
     required this.deletedBy,
+    this.fileName,
     this.fileType,
   });
 
@@ -56,7 +58,8 @@ class MessageModel {
       Constants.reactions: reactions,
       Constants.isSeenBy: isSeenBy,
       Constants.deletedBy: deletedBy,
-      Constants.fileType: fileType
+      Constants.fileType: fileType,
+      Constants.fileName: fileName
     };
   }
 
@@ -80,6 +83,7 @@ class MessageModel {
       isSeenBy: List<String>.from(map[Constants.isSeenBy] ?? []),
       deletedBy: List<String>.from(map[Constants.deletedBy] ?? []),
       fileType: map[Constants.fileType],
+      fileName: map[Constants.fileName],
     );
   }
 
@@ -101,6 +105,7 @@ class MessageModel {
       isSeenBy: isSeenBy,
       deletedBy: deletedBy,
       fileType: fileType,
+      fileName: fileName,
     );
   }
 }

@@ -1,8 +1,11 @@
+import 'package:chat_app_diplom/auth/encrtyption_service.dart';
 import 'package:chat_app_diplom/entity/message_model.dart';
+import 'package:chat_app_diplom/enums/enums.dart';
 import 'package:chat_app_diplom/widgets/display_message_type.dart';
 import 'package:date_format/date_format.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import 'package:swipe_to/swipe_to.dart';
 
 class ContactMessageWidget extends StatelessWidget {
@@ -10,6 +13,7 @@ class ContactMessageWidget extends StatelessWidget {
   final Function() onLeftSwipe;
   final MessageModel message;
   final String decryptedMessage;
+
 
   @override
   Widget build(BuildContext context) {
@@ -36,59 +40,56 @@ class ContactMessageWidget extends StatelessWidget {
             child: Stack(
               children: [
                 Padding(
-                  padding: const EdgeInsets.only(left: 10, right: 30, top: 5, bottom: 20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if(isReplying) ...[
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: Colors.grey[400],
-                            ),
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      DisplayMessageType(
-                                        type: message.messageType,
-                                        message: decryptedMessage,
-                                        overFlow: TextOverflow.ellipsis,
-                                        viewOnly: false,
-                                        color: Colors.white,
-                                        isReply: true,
-                                        extension: message.fileType,
-                                      ),
-                                      Text(
-                                        message.repliedMessage,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: GoogleFonts.openSans(
-                                          fontSize: 13,
-                                          color:  Colors.black,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
+                      padding: const EdgeInsets.only(left: 10, right: 30, top: 5, bottom: 20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if(isReplying) ...[
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[400],
                                 ),
-                              ],
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(message.senderName, style: GoogleFonts.openSans(
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.bold,
+                                          ),),
+                                          Text(
+                                              message.repliedMessage,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: GoogleFonts.openSans(
+                                                fontSize: 13,
+                                                color:  Colors.black,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              )
+                            ],
+                          DisplayMessageType(
+                                  type: message.messageType,
+                                  fileName: message.fileName,
+                                  message: decryptedMessage,
+                                  overFlow: TextOverflow.ellipsis,
+                                  viewOnly: false,
+                                  color: Colors.white,
+                                  isReply: false,
+                                  extension: message.fileType,
                             ),
-                          )
+
                         ],
-                      DisplayMessageType(
-                        type: message.messageType,
-                        message: decryptedMessage,
-                        overFlow: TextOverflow.ellipsis,
-                        viewOnly: false,
-                        color: Colors.white,
-                        isReply: false,
-                        extension: message.fileType,
-                      )
-                    ],
-                  ),
+                      ),
                 ),
                 Positioned(
                   bottom: 4,

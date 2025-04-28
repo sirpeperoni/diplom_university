@@ -4,6 +4,7 @@ import 'package:chat_app_diplom/entity/message_reply_model.dart';
 import 'package:chat_app_diplom/providers/auth_provider.dart';
 import 'package:chat_app_diplom/providers/chat_provider.dart';
 import 'package:chat_app_diplom/utilities/global_methods.dart';
+import 'package:chat_app_diplom/widgets/blank_message_widget.dart';
 import 'package:chat_app_diplom/widgets/contact_message_widget.dart';
 import 'package:chat_app_diplom/widgets/my_message_widget.dart';
 import 'package:flutter/material.dart';
@@ -12,8 +13,9 @@ import 'package:grouped_list/grouped_list.dart';
 import 'package:provider/provider.dart';
 
 class ChatList extends StatefulWidget {
-  const ChatList({super.key, required this.contactUID});
+  const ChatList({super.key, required this.contactUID, required this.chatId});
   final String contactUID;
+  final String chatId;
   @override
   State<ChatList> createState() => _ChatListState();
 }
@@ -94,44 +96,63 @@ class _ChatListState extends State<ChatList> {
                 final isMe = element.senderUID == uid;
                 final senderUID = element.senderUID;
                 final msg = element.message;
-                final message = context.read<EncryptionService>().decryptMessage(msg, widget.contactUID);
                 final senderName = element.senderName;
                 final senderImage = element.senderImage;
                 final messageType = element.messageType;
-                return isMe ? Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8.0),
-                  child: MyMessageWidget(
-                    message: element,
-                    decryptedMessage: message,
-                    onLeftSwipe: (){
-                      final messageReply = MessageReplyModel(
-                        senderUID: senderUID,
-                        message: message,
-                        senderName: senderName,
-                        senderImage: senderImage,
-                        messageType: messageType,
-                        isMe: isMe
-                      );
-                      context.read<ChatProvider>().setMessageReplyModel(messageReply);
-                    },
-                  ),
-                ) : Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8.0),
-                  child: ContactMessageWidget(
-                    message: element,
-                    decryptedMessage: message,
-                    onLeftSwipe: (){
-                      final messageReply = MessageReplyModel(
-                        senderUID: senderUID,
-                        message: message,
-                        senderName: senderName,
-                        senderImage: senderImage,
-                        messageType: messageType,
-                        isMe: isMe
-                      );
-                      context.read<ChatProvider>().setMessageReplyModel(messageReply);
+                return isMe ? FutureBuilder(
+                  future: context.read<ChatProvider>().decryptMessage(msg, widget.contactUID, widget.chatId, uid),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const BlankMessageWidget();
                     }
-                  ),
+                    return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8.0),
+                          child: MyMessageWidget(
+                            message: element,
+                            decryptedMessage: snapshot.data ?? '',
+                            onLeftSwipe: (){
+                              final messageReply = MessageReplyModel(
+                                senderUID: senderUID,
+                                message: msg,
+                                senderName: senderName,
+                                senderImage: senderImage,
+                                messageType: messageType,
+                                isMe: isMe,
+                                contactId: widget.contactUID,
+                                chatId: widget.chatId,
+                                
+                              );
+                              context.read<ChatProvider>().setMessageReplyModel(messageReply);
+                      }
+                    ) );
+                  }
+                ) : FutureBuilder(
+                  future: context.read<ChatProvider>().decryptMessage(msg, widget.contactUID, widget.chatId, uid),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const BlankMessageWidget();
+                    }
+                    return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8.0),
+                          child: ContactMessageWidget(
+                            message: element,
+                            decryptedMessage: snapshot.data ?? '',
+                            onLeftSwipe: (){
+                              final messageReply = MessageReplyModel(
+                                senderUID: senderUID,
+                                message: msg,
+                                senderName: senderName,
+                                senderImage: senderImage,
+                                messageType: messageType,
+                                isMe: isMe,
+                                contactId: widget.contactUID,
+                                chatId: widget.chatId,
+                              );
+                              context.read<ChatProvider>().setMessageReplyModel(messageReply);
+                            }
+                          ),
+                    );
+                  }
                 );
               },
               groupComparator: (value1, value2) =>

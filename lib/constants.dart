@@ -62,6 +62,7 @@ class Constants {
   static const String contactUID = 'contactUID';
   static const String message = 'message';
   static const String messageType = 'messageType';
+  static const String fileName = 'fileName';
   static const String timeSent = 'timeSent';
   static const String messageId = 'messageId';
   static const String isSeen = 'isSeen';
