@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:chat_app_diplom/auth/encrtyption_service.dart';
+import 'package:chat_app_diplom/repositories/encrtyption_service.dart';
 import 'package:chat_app_diplom/constants.dart';
 import 'package:chat_app_diplom/entity/last_message_model.dart';
 import 'package:chat_app_diplom/entity/message_model.dart';

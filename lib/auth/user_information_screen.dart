@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:chat_app_diplom/auth/encrtyption_service.dart';
 import 'package:chat_app_diplom/constants.dart';
 import 'package:chat_app_diplom/entity/user_model.dart';
 import 'package:chat_app_diplom/providers/auth_provider.dart';
@@ -128,7 +127,7 @@ class _UserInformationScreenState extends State<UserInformationScreen> {
                     }
                     if(_nameController.text.isNotEmpty && finalFileImage != null) {
                       final uid = context.read<AuthenticationProvider>().uid!;
-                      final json = await context.read<EncryptionService>().generateDHKeys(uid);
+                      final json = await context.read<AuthenticationProvider>().generateDHKeys(uid);
                       final g = json?[Constants.g];
                       final p = json?[Constants.p];
                       final publicKey = json?[Constants.publicKey];

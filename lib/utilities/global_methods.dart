@@ -49,8 +49,8 @@ Future<String> storeFileToStorage({
   
   TaskSnapshot taskSnapshot = await uploadTask;
   String fileUrl = await taskSnapshot.ref.getDownloadURL();
-  FullMetadata metadata = await taskSnapshot.ref.getMetadata();
-  String? extension = metadata.contentType;
+
+
   return fileUrl;
 }
 

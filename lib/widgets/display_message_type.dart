@@ -4,11 +4,8 @@ import 'package:chat_app_diplom/enums/enums.dart';
 import 'package:chat_app_diplom/repositories/download_repository.dart';
 import 'package:chat_app_diplom/widgets/audio_player_widget.dart';
 import 'package:chat_app_diplom/widgets/video_player_widget.dart';
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 
 
@@ -43,7 +40,7 @@ class DisplayMessageType extends StatefulWidget {
 class _DisplayMessageTypeState extends State<DisplayMessageType> {
   @override
   Widget build(BuildContext context) {
-    var progress = 0.0;
+
     bool isLoading = false;
     final downloadProgress = context.select((DownloadRepository p) => p.downloadProgress);
     Widget messageToShow() {
@@ -112,14 +109,14 @@ class _DisplayMessageTypeState extends State<DisplayMessageType> {
                       // For example, you can show a snackbar with the download progress
                     },
                     child: isLoading ? CircularProgressIndicator(
-                      value: progress / 100,
+                      value: downloadProgress / 100,
                       color: widget.color,
                     ) : const Icon(
                       Icons.file_copy, size: 40,
                     )
                   ),
                   Text(
-                    "." + widget.extension!,
+                    ".${widget.extension!}",
                     style: GoogleFonts.openSans(
                       fontSize: 16,
                       fontWeight: FontWeight.w500,

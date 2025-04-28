@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:chat_app_diplom/auth/encrtyption_service.dart';
 import 'package:chat_app_diplom/enums/enums.dart';
 import 'package:chat_app_diplom/providers/auth_provider.dart';
 import 'package:chat_app_diplom/providers/chat_provider.dart';

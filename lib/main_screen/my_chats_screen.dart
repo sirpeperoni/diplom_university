@@ -1,4 +1,3 @@
-import 'package:chat_app_diplom/auth/encrtyption_service.dart';
 import 'package:chat_app_diplom/constants.dart';
 import 'package:chat_app_diplom/entity/last_message_model.dart';
 import 'package:chat_app_diplom/providers/auth_provider.dart';
@@ -52,12 +51,6 @@ class _MyChatsScreenState extends State<MyChatsScreen> {
                       itemCount: chats.length,
                       itemBuilder: (context, index) {
                         final chat = chats[index];
-                        //String? commonKey = context.read<ChatProvider>().getCommonKey(chat.contactUID);
-
-                        // if(commonKey == null) {
-                        //   context.read<EncryptionService>().createCommomKeyForContact(chat.contactUID, chat.chatId, uid);
-                        //   commonKey = context.read<ChatProvider>().getCommonKey(chat.contactUID);
-                        // }
 
                         return ChatWidget(
                           chat: chat,

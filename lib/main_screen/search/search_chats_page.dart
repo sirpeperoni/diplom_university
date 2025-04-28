@@ -1,4 +1,3 @@
-import 'package:chat_app_diplom/auth/encrtyption_service.dart';
 import 'package:chat_app_diplom/constants.dart';
 import 'package:chat_app_diplom/entity/last_message_model.dart';
 import 'package:chat_app_diplom/providers/auth_provider.dart';
@@ -65,7 +64,7 @@ class _SerchChatsPageState extends State<SerchChatsPage> {
                           future: context.read<ChatProvider>().decryptMessage(user.message, user.contactUID, user.chatId, uid),
                           builder: (context, snapshot) {
                             if (snapshot.connectionState == ConnectionState.waiting) {
-                              return CircularProgressIndicator();
+                              return const CircularProgressIndicator();
                             }
                             return InkWell(
                               onTap: () {

@@ -1,4 +1,3 @@
-import 'package:chat_app_diplom/auth/encrtyption_service.dart';
 import 'package:chat_app_diplom/entity/message_model.dart';
 import 'package:chat_app_diplom/entity/message_reply_model.dart';
 import 'package:chat_app_diplom/providers/auth_provider.dart';

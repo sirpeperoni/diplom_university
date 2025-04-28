@@ -32,7 +32,6 @@ class EncryptionService {
     final snapshot = doc.data();
     final p = BigInt.parse(snapshot!["p"]);
     final A = BigInt.parse(snapshot["publicKey"]);
-    print(p);
     final b = _preferences.getString("privateKey_$uid");
     final sharedSecret = A.modPow(BigInt.parse(b!), p);
     _preferences
@@ -47,7 +46,7 @@ class EncryptionService {
     var secretKey = _preferences.getString("commonKey_$contactUID");
     print(secretKey);
     secretKey ??= await getCommonKey(chatId, uid, contactUID);
-    final encrypter = Encrypter(AES(Key.fromUtf8(secretKey!.substring(0, 32))));
+    final encrypter = Encrypter(AES(Key.fromUtf8(secretKey.substring(0, 32))));
     final parts = encryptedData.split("|");
     final iv = IV.fromBase64(parts[0]);
     final encrypted = Encrypted.fromBase64(parts[1]);

@@ -11,6 +11,7 @@ import 'package:chat_app_diplom/entity/last_message_model.dart';
 import 'package:chat_app_diplom/entity/user_model.dart';
 import 'package:chat_app_diplom/repositories/auth_repository.dart';
 import 'package:chat_app_diplom/repositories/email_repository.dart';
+import 'package:chat_app_diplom/repositories/encrtyption_service.dart';
 import 'package:chat_app_diplom/repositories/shared_preferences_repository.dart';
 import 'package:chat_app_diplom/utilities/global_methods.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -21,7 +22,8 @@ class AuthenticationProvider extends ChangeNotifier {
   final AuthRepository _authRepository;
   final SharedPreferencesRepository _sharedPreferencesRepository;
   final EmailRepository _emailRepository;
-  AuthenticationProvider(this._authRepository, this._sharedPreferencesRepository, this._emailRepository);
+  final EncryptionService _encryptionService;
+  AuthenticationProvider(this._authRepository, this._sharedPreferencesRepository, this._emailRepository, this._encryptionService);
 
   bool _isLoading = false;
   bool _isSuccessful = false;
@@ -364,6 +366,15 @@ class AuthenticationProvider extends ChangeNotifier {
     }
 
     return friendRequestsList;
+  }
+
+
+  Future<void> createCommomKeyForSender(String contactUID, String userID) async {
+    await _encryptionService.createCommomKeyForSender(contactUID, userID);
+  }
+
+  Future<Map<String, String>?> generateDHKeys(String userId) async {
+    return await _encryptionService.generateDHKeys(userId);
   }
 
   

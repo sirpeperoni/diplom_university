@@ -1,6 +1,5 @@
 // ignore_for_file: use_build_context_synchronously
 
-import 'package:chat_app_diplom/auth/encrtyption_service.dart';
 import 'package:chat_app_diplom/constants.dart';
 import 'package:chat_app_diplom/entity/user_model.dart';
 import 'package:chat_app_diplom/providers/auth_provider.dart';
@@ -252,7 +251,7 @@ class FriendsButton extends StatelessWidget {
                     String? chatId = '';
                     if(commonKey == null) {
                       final userID = context.read<AuthenticationProvider>().uid;
-                      context.read<EncryptionService>().createCommomKeyForSender(userModel.uid, userID!);
+                      context.read<AuthenticationProvider>().createCommomKeyForSender(userModel.uid, userID!);
                     }
                     chatId = context.read<ChatProvider>().getChatId(userModel.uid);
                     Navigator.pushNamed(context, Constants.chatScreen,

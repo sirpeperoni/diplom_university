@@ -1,10 +1,8 @@
-import 'package:chat_app_diplom/auth/encrtyption_service.dart';
 import 'package:chat_app_diplom/entity/message_model.dart';
 import 'package:chat_app_diplom/widgets/display_message_type.dart';
 import 'package:date_format/date_format.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:provider/provider.dart';
 import 'package:swipe_to/swipe_to.dart';
 
 class MyMessageWidget extends StatelessWidget {

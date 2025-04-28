@@ -1,5 +1,5 @@
 import 'package:adaptive_theme/adaptive_theme.dart';
-import 'package:chat_app_diplom/auth/encrtyption_service.dart';
+import 'package:chat_app_diplom/repositories/encrtyption_service.dart';
 import 'package:chat_app_diplom/auth/landing_screen.dart';
 import 'package:chat_app_diplom/auth/login_screen.dart';
 import 'package:chat_app_diplom/auth/otp_screen.dart';
@@ -62,7 +62,7 @@ void main() async {
     ChangeNotifierProvider(
             create: (_) => DownloadRepository(),
     ),
-    ChangeNotifierProvider(create: (ctx) => AuthenticationProvider(ctx.read<AuthRepository>(), ctx.read<SharedPreferencesRepository>(), ctx.read<EmailRepository>())),
+    ChangeNotifierProvider(create: (ctx) => AuthenticationProvider(ctx.read<AuthRepository>(), ctx.read<SharedPreferencesRepository>(), ctx.read<EmailRepository>(), ctx.read<EncryptionService>())),
     ChangeNotifierProvider(create: (ctx) => ChatProvider(ctx.read<ChatRepository>(), ctx.read<SharedPreferencesRepository>(), ctx.read<EncryptionService>())),
   ], child: MainApp(savedThemeMode: savedThemeMode)));
 }

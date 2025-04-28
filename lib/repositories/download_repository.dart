@@ -27,14 +27,14 @@ class DownloadRepository extends ChangeNotifier {
 
   Future<void> registerIsolate() async {
     bool success = IsolateNameServer.registerPortWithName(receivePort.sendPort, "download_port");
-    /*if(!success) {
+    if(!success) {
     registerIsolate();
     _dispose();
-    }*/
+    }
     receivePort.listen((dynamic data) {
       downloadProgress = _getProgress(data[1], data[2]);
     });
-    //_dispose();
+    _dispose();
   }
 
   int _getProgress (DownloadTaskStatus status, int progress) {
