@@ -76,9 +76,18 @@ class AuthenticationProvider extends ChangeNotifier {
     await _authRepository.updateUserAboutMe(value: value, currentUser: await _authRepository.currentUser());
   }
 
+  Future<void> updateUserName({required String value}) async {
+    await _authRepository.updateUserName(value: value, currentUser: await _authRepository.currentUser());
+  }
+
+  Future<void> updateUserImage({required String value}) async {
+    await _authRepository.updateUserImage(value: value, currentUser: await _authRepository.currentUser());
+  }
+
   //get user data from firestore
   Future<void> getUserDataFromFirestore() async {
     _userModel = await _authRepository.getUserData(uid!);
+    print(_userModel!.image);
     notifyListeners();
   }
 
@@ -213,6 +222,15 @@ class AuthenticationProvider extends ChangeNotifier {
       notifyListeners();
     }
 
+  }
+
+  void saveImage({required File? fileImage, required UserModel userModel}) async {
+    if (fileImage != null) {
+      // upload image to storage
+      String imageUrl = await storeFileToStorage(file: fileImage, reference:'${Constants.userImages}/${userModel.uid}');
+      print("object: " + imageUrl);
+      updateUserImage(value: imageUrl);
+    }
   }
   
   //save user data to firestore

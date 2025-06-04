@@ -1,4 +1,5 @@
 import 'package:adaptive_theme/adaptive_theme.dart';
+import 'package:chat_app_diplom/repositories/chat_storage.dart';
 import 'package:chat_app_diplom/repositories/encrtyption_service.dart';
 import 'package:chat_app_diplom/auth/landing_screen.dart';
 import 'package:chat_app_diplom/auth/login_screen.dart';
@@ -30,6 +31,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -46,6 +48,9 @@ void main() async {
     debug: true, // optional: set to false to disable printing logs to console (default: true)
     ignoreSsl: true // option: set to false to disable working with http links (default: false)
   );
+  await Hive.initFlutter();
+  await ChatStorage.init();
+  
 
   runApp(MultiProvider(providers: [
     Provider(create: (_) => FirebaseAuth.instance),
@@ -54,7 +59,8 @@ void main() async {
     Provider<SharedPreferences>(
       create: (context) => sharedPreferences,
     ),
-    Provider(create: (ctx) => EncryptionService(ctx.read<FirebaseFirestore>(), ctx.read<SharedPreferences>())),
+    Provider(create: (context) => ChatStorage()), 
+    Provider(create: (ctx) => EncryptionService(ctx.read<FirebaseFirestore>(), ctx.read<SharedPreferences>(), ctx.read<ChatStorage>())),
     Provider(create: (ctx) => AuthRepository(ctx.read<FirebaseFirestore>(), ctx.read<FirebaseAuth>())),
     Provider(create: (ctx) => ChatRepository(ctx.read<FirebaseFirestore>())),
     Provider(create: (ctx) => EmailRepository(ctx.read<Dio>())),

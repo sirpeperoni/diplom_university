@@ -4,6 +4,7 @@ import 'package:chat_app_diplom/constants.dart';
 import 'package:chat_app_diplom/entity/user_model.dart';
 import 'package:chat_app_diplom/providers/auth_provider.dart';
 import 'package:chat_app_diplom/providers/chat_provider.dart';
+import 'package:chat_app_diplom/repositories/encrtyption_service.dart';
 import 'package:chat_app_diplom/utilities/global_methods.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';

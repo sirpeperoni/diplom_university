@@ -26,6 +26,7 @@ Widget userImageWidget(
     required Function() onTap
   }
 ){
+  print(imageUrl);
   return GestureDetector(
     onTap: onTap,
     child: CircleAvatar(

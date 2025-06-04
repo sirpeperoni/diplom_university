@@ -1,5 +1,6 @@
 import 'package:chat_app_diplom/entity/message_model.dart';
 import 'package:chat_app_diplom/entity/message_reply_model.dart';
+import 'package:chat_app_diplom/enums/enums.dart';
 import 'package:chat_app_diplom/providers/auth_provider.dart';
 import 'package:chat_app_diplom/providers/chat_provider.dart';
 import 'package:chat_app_diplom/utilities/global_methods.dart';
@@ -95,64 +96,16 @@ class _ChatListState extends State<ChatList> {
                 final isMe = element.senderUID == uid;
                 final senderUID = element.senderUID;
                 final msg = element.message;
+                final msgIsLocaly = context.read<ChatProvider>().getMessageLocally(msg);
+                
                 final senderName = element.senderName;
                 final senderImage = element.senderImage;
                 final messageType = element.messageType;
-                return isMe ? FutureBuilder(
-                  future: context.read<ChatProvider>().decryptMessage(msg, widget.contactUID, widget.chatId, uid),
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const BlankMessageWidget();
-                    }
-                    return Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 8.0),
-                          child: MyMessageWidget(
-                            message: element,
-                            decryptedMessage: snapshot.data ?? '',
-                            onLeftSwipe: (){
-                              final messageReply = MessageReplyModel(
-                                senderUID: senderUID,
-                                message: msg,
-                                senderName: senderName,
-                                senderImage: senderImage,
-                                messageType: messageType,
-                                isMe: isMe,
-                                contactId: widget.contactUID,
-                                chatId: widget.chatId,
-                                
-                              );
-                              context.read<ChatProvider>().setMessageReplyModel(messageReply);
-                      }
-                    ) );
-                  }
-                ) : FutureBuilder(
-                  future: context.read<ChatProvider>().decryptMessage(msg, widget.contactUID, widget.chatId, uid),
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const BlankMessageWidget();
-                    }
-                    return Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 8.0),
-                          child: ContactMessageWidget(
-                            message: element,
-                            decryptedMessage: snapshot.data ?? '',
-                            onLeftSwipe: (){
-                              final messageReply = MessageReplyModel(
-                                senderUID: senderUID,
-                                message: msg,
-                                senderName: senderName,
-                                senderImage: senderImage,
-                                messageType: messageType,
-                                isMe: isMe,
-                                contactId: widget.contactUID,
-                                chatId: widget.chatId,
-                              );
-                              context.read<ChatProvider>().setMessageReplyModel(messageReply);
-                            }
-                          ),
-                    );
-                  }
-                );
+                
+                return isMe ? 
+                  DecryptMessageWidget(msg: msg, widget: widget, uid: uid, senderUID: senderUID, senderName: senderName, senderImage: senderImage, messageType: messageType, isMe: isMe, msgIsStoredLocally: msgIsLocaly, element: element) 
+                    : 
+                  DecryptCompanionWidget(msg: msg, widget: widget, uid: uid, senderUID: senderUID, senderName: senderName, senderImage: senderImage, messageType: messageType, isMe: isMe, msgIsStoredLocally: msgIsLocaly, element: element);
               },
               groupComparator: (value1, value2) =>
                 value2.compareTo(value1),
@@ -172,4 +125,159 @@ class _ChatListState extends State<ChatList> {
   }
 
   
+}
+
+class DecryptCompanionWidget extends StatelessWidget {
+  const DecryptCompanionWidget({
+    super.key,
+    required this.msg,
+    required this.widget,
+    required this.uid,
+    required this.senderUID,
+    required this.senderName,
+    required this.senderImage,
+    required this.messageType,
+    required this.isMe,
+    required this.msgIsStoredLocally,
+    required this.element,
+  });
+
+  final dynamic msg;
+  final ChatList widget;
+  final String uid;
+  final dynamic senderUID;
+  final dynamic senderName;
+  final dynamic senderImage;
+  final dynamic messageType;
+  final bool isMe;
+  final String? msgIsStoredLocally;
+  final MessageModel element;
+  @override
+  Widget build(BuildContext context) {
+    return msgIsStoredLocally == null ? FutureBuilder(
+      future: context.read<ChatProvider>().decryptMessage(msg, widget.contactUID, widget.chatId, uid),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const BlankMessageWidget();
+        }
+        return Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8.0),
+              child: ContactMessageWidget(
+                message: element,
+                decryptedMessage: snapshot.data ?? '',
+                onLeftSwipe: (){
+                  final messageReply = MessageReplyModel(
+                    senderUID: senderUID,
+                    message: msg,
+                    senderName: senderName,
+                    senderImage: senderImage,
+                    messageType: messageType,
+                    isMe: isMe,
+                    contactId: widget.contactUID,
+                    chatId: widget.chatId,
+                  );
+                  context.read<ChatProvider>().setMessageReplyModel(messageReply);
+                }
+              ),
+        );
+      }
+    ) : Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8.0),
+              child: ContactMessageWidget(
+                message: element,
+                decryptedMessage: msgIsStoredLocally ?? '',
+                onLeftSwipe: (){
+                  final messageReply = MessageReplyModel(
+                    senderUID: senderUID,
+                    message: msg,
+                    senderName: senderName,
+                    senderImage: senderImage,
+                    messageType: messageType,
+                    isMe: isMe,
+                    contactId: widget.contactUID,
+                    chatId: widget.chatId,
+                  );
+                  context.read<ChatProvider>().setMessageReplyModel(messageReply);
+                }
+              ),
+        );
+  }
+}
+
+class DecryptMessageWidget extends StatelessWidget {
+  const DecryptMessageWidget({
+    super.key,
+    required this.msg,
+    required this.widget,
+    required this.uid,
+    required this.senderUID,
+    required this.senderName,
+    required this.senderImage,
+    required this.messageType,
+    required this.isMe,
+    required this.msgIsStoredLocally,
+    required this.element,
+  });
+
+  final dynamic msg;
+  final ChatList widget;
+  final String uid;
+  final dynamic senderUID;
+  final dynamic senderName;
+  final dynamic senderImage;
+  final dynamic messageType;
+  final bool isMe;
+  final String? msgIsStoredLocally;
+  final MessageModel element;
+
+  @override
+  Widget build(BuildContext context) {
+    return msgIsStoredLocally == null ? FutureBuilder(
+      future: context.read<ChatProvider>().decryptMessage(msg, widget.contactUID, widget.chatId, uid),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const BlankMessageWidget();
+        }
+        return Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8.0),
+              child: MyMessageWidget(
+                message: element,
+                decryptedMessage: snapshot.data ?? '',
+                onLeftSwipe: (){
+                  final messageReply = MessageReplyModel(
+                    senderUID: senderUID,
+                    message: msg,
+                    senderName: senderName,
+                    senderImage: senderImage,
+                    messageType: messageType,
+                    isMe: isMe,
+                    contactId: widget.contactUID,
+                    chatId: widget.chatId,
+                    
+                  );
+                  context.read<ChatProvider>().setMessageReplyModel(messageReply);
+          }
+        ) );
+      }
+    ) : Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8.0),
+              child: MyMessageWidget(
+                message: element,
+                decryptedMessage: msgIsStoredLocally ?? '',
+                onLeftSwipe: (){
+                  final messageReply = MessageReplyModel(
+                    senderUID: senderUID,
+                    message: msgIsStoredLocally ?? '',
+                    senderName: senderName,
+                    senderImage: senderImage,
+                    messageType: messageType,
+                    isMe: isMe,
+                    contactId: widget.contactUID,
+                    chatId: widget.chatId,
+                    
+                  );
+                  context.read<ChatProvider>().setMessageReplyModel(messageReply);
+          }
+        ) );
+  }
 }

@@ -1,4 +1,6 @@
 import 'package:chat_app_diplom/constants.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:chat_app_diplom/entity/user_model.dart';
 import 'package:chat_app_diplom/main_screen/my_chats_screen.dart';
 import 'package:chat_app_diplom/main_screen/people_screen.dart';
 import 'package:chat_app_diplom/providers/auth_provider.dart';
@@ -35,6 +37,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver, Ti
     super.dispose();
   }
 
+  
+
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     switch (state) {
@@ -64,25 +68,43 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver, Ti
 
   @override
   Widget build(BuildContext context) {
-    final model = context.watch<AuthenticationProvider>();
+    
+
     
     return Scaffold(
       appBar: AppBar(
         title: const Text("Doge Chat"),
         actions: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: userImageWidget(imageUrl: model.userModel!.image, radius: 20, onTap: (){
-              //navigate to user profile
-              Navigator.pushNamed(
-                context, 
-                Constants.profileScreen,
-                arguments: {
-                  "CurrentUserPage":model.userModel!.uid,
-                  "UserPage":model.userModel!.uid
-                }
+          
+          StreamBuilder(
+            stream: context.read<AuthenticationProvider>().userStream(userID: context.read<AuthenticationProvider>().userModel!.uid),
+            builder: (context, snapshot) {
+              if (snapshot.hasError) {
+                return const Center(child: Text('Something went wrong'));
+              }
+
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+
+              final userModel =
+                UserModel.fromMap(snapshot.data!.data() as Map<String, dynamic>);
+              return Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: userImageWidget(imageUrl: userModel.image, radius: 20, onTap: (){
+              
+                  //navigate to user profile
+                  Navigator.pushNamed(
+                    context, 
+                    Constants.profileScreen,
+                    arguments: {
+                      "CurrentUserPage":context.read<AuthenticationProvider>().userModel!.uid,
+                      "UserPage":context.read<AuthenticationProvider>().userModel!.uid
+                    }
+                  );
+                }),
               );
-            }),
+            }
           )
         ],
       ),

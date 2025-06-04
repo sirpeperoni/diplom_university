@@ -24,6 +24,7 @@ class _UserInformationScreenState extends State<UserInformationScreen> {
   final TextEditingController _nameController = TextEditingController();
   File? finalFileImage;
   String userImage = '';
+  
   @override
   void dispose() {
     _nameController.dispose();
@@ -87,7 +88,23 @@ class _UserInformationScreenState extends State<UserInformationScreen> {
   }
   @override
   Widget build(BuildContext context) {
+    final args = ModalRoute.of(context)?.settings.arguments;
+    var user;
+    var onUpdate;
+    final TextEditingController controller = TextEditingController();
+    if (args is UserModel) {
+      _nameController.text = args.name;
+      controller.text = args.aboutMe;
+      user = args;
+      onUpdate = true;
+    } else {
+      _nameController.text = '';
+      controller.text = '';
+      onUpdate = false;
+    }
+    
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       appBar: AppBar(
         centerTitle: true,
         title: Text('Добавьте информацию о себе', style: GoogleFonts.openSans(fontSize: 18, fontWeight: FontWeight.w500),),
@@ -102,7 +119,7 @@ class _UserInformationScreenState extends State<UserInformationScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
           child: Column(
             children: [
-              DisplayUserImage(finalFileImage: finalFileImage, radius: 60, onPressed: (){showBottomSheet();}),
+              DisplayUserImage(finalFileImage: finalFileImage, radius: 60, onPressed: (){showBottomSheet();}, onUpdate: onUpdate, userModel: user,),
               const SizedBox(height: 30,),
               TextField(
                 controller: _nameController,
@@ -115,28 +132,63 @@ class _UserInformationScreenState extends State<UserInformationScreen> {
                 ),
               ),
               const SizedBox(height: 30,),
+              if(onUpdate) ...[
+                Center(
+                  child: Expanded(
+                    child: TextField(
+                      controller: controller,
+                      maxLines: 13,
+                      decoration: const InputDecoration(
+                        hintText: 'Обо мне',
+                        labelText: 'Обо мне',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(8)),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+              const SizedBox(height: 30,),
               SizedBox(
                 width: double.infinity,
                 child: RoundedLoadingButton(
                   controller: _btnCodeController,
                   onPressed: () async {
-                    if(_nameController.text.length < 3){
-                      showSnackBar(context, 'Имя должно быть больше 3 символов');
-                      _btnCodeController.reset();
-                      return;
-                    }
-                    if(_nameController.text.isNotEmpty && finalFileImage != null) {
-                      final uid = context.read<AuthenticationProvider>().uid!;
-                      final json = await context.read<AuthenticationProvider>().generateDHKeys(uid);
-                      final g = json?[Constants.g];
-                      final p = json?[Constants.p];
-                      final publicKey = json?[Constants.publicKey];
-                      saveUserDataToFireStore(g!, p!, publicKey!);
+                    if(args is UserModel){
+                      if(_nameController.text.length < 3){
+                        showSnackBar(context, 'Имя должно быть больше 3 символов');
+                        _btnCodeController.reset();
+                        return;
+                      }
+                      context.read<AuthenticationProvider>().updateUserAboutMe(value: controller.text);
+                      context.read<AuthenticationProvider>().updateUserName(value: _nameController.text);
+                      if(finalFileImage != null){
+                        context.read<AuthenticationProvider>().saveImage(fileImage: finalFileImage, userModel: user);
+                      }
+                      context.read<AuthenticationProvider>().getUserDataFromFirestore();
+                      Navigator.pop(context);
+                      
                     } else {
-                      showSnackBar(context, 'Заполните все поля');
-                      _btnCodeController.reset();
-                      return;
+                      if(_nameController.text.length < 3){
+                        showSnackBar(context, 'Имя должно быть больше 3 символов');
+                        _btnCodeController.reset();
+                        return;
+                      }
+                      if(_nameController.text.isNotEmpty && finalFileImage != null) {
+                        final uid = context.read<AuthenticationProvider>().uid!;
+                        final json = await context.read<AuthenticationProvider>().generateDHKeys(uid);
+                        final g = json?[Constants.g];
+                        final p = json?[Constants.p];
+                        final publicKey = json?[Constants.publicKey];
+                        saveUserDataToFireStore(g!, p!, publicKey!);
+                      } else {
+                        showSnackBar(context, 'Заполните все поля');
+                        _btnCodeController.reset();
+                        return;
+                      }
                     }
+
                   },
                   successIcon: Icons.check,
                   successColor: Colors.green,

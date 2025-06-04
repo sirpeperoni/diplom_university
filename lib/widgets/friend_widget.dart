@@ -2,6 +2,7 @@ import 'package:chat_app_diplom/constants.dart';
 import 'package:chat_app_diplom/entity/user_model.dart';
 import 'package:chat_app_diplom/enums/enums.dart';
 import 'package:chat_app_diplom/providers/auth_provider.dart';
+import 'package:chat_app_diplom/providers/chat_provider.dart';
 import 'package:chat_app_diplom/utilities/global_methods.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -52,10 +53,12 @@ class FriendWidget extends StatelessWidget {
         if (viewType == FriendViewType.friends) {
           // navigate to chat screen with the folowing arguments
           // 1. friend uid 2. friend name 3. friend image 
+          final chatId = context.read<ChatProvider>().getChatId(friend.uid);
           Navigator.pushNamed(context, Constants.chatScreen, arguments: {
             Constants.contactUID: friend.uid,
             Constants.contactName: friend.name,
             Constants.contactImage: friend.image,
+            Constants.chatId: chatId,
           });
         } else if (viewType == FriendViewType.allUsers) {
           // navite to this user's profile screen

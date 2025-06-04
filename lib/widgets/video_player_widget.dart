@@ -32,8 +32,10 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
   void initState() {
     super.initState();
     flickManager = FlickManager(
+      autoPlay: false,
       videoPlayerController:
           VideoPlayerController.networkUrl(Uri.parse(widget.videoUrl),
+      
     ));
     isLoading = false;
   }
@@ -63,22 +65,31 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
         children: [
           isLoading
               ? const Center(
-                  child: CircularProgressIndicator(),
+                  child: FlickAutoPlayCircularProgress(),
                 )
-              : FlickVideoPlayer(
-                  flickManager: flickManager,
-                  flickVideoWithControls: const FlickVideoWithControls(
-                    closedCaptionTextStyle: TextStyle(fontSize: 8),
-                    controls: FlickPortraitControls(),
-                    aspectRatioWhenLoading: 16 / 9,
-                  ),
-                  
-                  flickVideoWithControlsFullscreen: const FlickVideoWithControls(
-                    videoFit: BoxFit.contain,
-                    controls: FlickLandscapeControls(),
+              : VisibilityDetector(
+                key: ObjectKey(flickManager),
+                onVisibilityChanged: (visibility){
+                              if (visibility.visibleFraction == 0 && this.mounted) {
+                                flickManager?.flickControlManager?.pause();//pausing  functionality 
+                              }
+
+                            },
+                child: FlickVideoPlayer(
+                    flickManager: flickManager,
+                    flickVideoWithControls: const FlickVideoWithControls(
+                      closedCaptionTextStyle: TextStyle(fontSize: 8),
+                      controls: FlickPortraitControls(),
+                      aspectRatioWhenLoading: 16 / 9,
+                    ),
                     
+                    flickVideoWithControlsFullscreen: const FlickVideoWithControls(
+                      videoFit: BoxFit.contain,
+                      controls: FlickLandscapeControls(),
+                      
+                    ),
                   ),
-                ),
+              ),
         ],
       ),
     );

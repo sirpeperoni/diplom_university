@@ -2,6 +2,7 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:chat_app_diplom/constants.dart';
+import 'package:chat_app_diplom/repositories/chat_storage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:encrypt/encrypt.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -11,14 +12,17 @@ import 'package:uuid/uuid.dart';
 class EncryptionService {
   final FirebaseFirestore _firestore;
   final SharedPreferences _preferences;
-  EncryptionService(this._firestore, this._preferences);// Инициализируем Encrypter
+  final ChatStorage _chatStorage;
+  EncryptionService(this._firestore, this._preferences, this._chatStorage);// Инициализируем Encrypter
+
   
+
   Future<String> encryptMessage(String text, String chatId, String uid, String contactUID) async {
     var secretKey = _preferences.getString("commonKey_$contactUID");
 
     secretKey ??= await getCommonKey(chatId, uid, contactUID);
 
-    final encrypter = Encrypter(AES(Key.fromUtf8(secretKey.substring(0, 32))));
+    final encrypter = Encrypter(AES(Key.fromUtf8(secretKey.substring(0, 32)),mode: AESMode.gcm));
     final iv = IV.fromSecureRandom(16); // Новый IV при каждом шифровании
     return "${iv.base64}|${encrypter.encrypt(text, iv: iv).base64}";
   }
@@ -44,13 +48,20 @@ class EncryptionService {
 
   Future<String> decryptMessage(String encryptedData,  String contactUID, String chatId,String uid) async {
     var secretKey = _preferences.getString("commonKey_$contactUID");
-    print(secretKey);
+    if(_preferences.getString("chatId_$contactUID") == null){
+      _preferences.setString("chatId_$contactUID", chatId);
+    }
     secretKey ??= await getCommonKey(chatId, uid, contactUID);
-    final encrypter = Encrypter(AES(Key.fromUtf8(secretKey.substring(0, 32))));
+    final encrypter = Encrypter(AES(Key.fromUtf8(secretKey.substring(0, 32)), mode: AESMode.gcm));
     final parts = encryptedData.split("|");
     final iv = IV.fromBase64(parts[0]);
     final encrypted = Encrypted.fromBase64(parts[1]);
-    return encrypter.decrypt(encrypted, iv: iv);
+    final decryptedMsg = encrypter.decrypt(encrypted, iv: iv);
+    if(encryptedData.length >= 255){
+      encryptedData = encryptedData.substring(0, 254);
+    }
+    _chatStorage.addMessage(encryptedData, decryptedMsg);
+    return decryptedMsg;
   }
 
   BigInt _generateRandomBigInt(int bitLength) {
@@ -97,12 +108,12 @@ class EncryptionService {
     };
   }
 
-  Future<String?> getChatId(String contactUID, String senderUID) async {
+  Future<String?> getChatId(String contactUID, String userUID) async {
     final contact = await _firestore
           .collection(Constants.users)
-          .doc(contactUID)
+          .doc(userUID)
           .collection(Constants.chats)
-          .doc(senderUID)
+          .doc(contactUID)
           .get();
 
     final map = contact.data();
@@ -166,6 +177,11 @@ class EncryptionService {
     _preferences.setString("commonKey_$contactUID", sharedSecret.toString());
     await batch.commit();
     print("Устройство A: Общий секрет = $sharedSecret");
+  }
+
+  String? getMessageLocally(String encryptedMessage) {
+    final decryptedMessage = _chatStorage.getMessage(encryptedMessage);
+    return decryptedMessage;
   }
 
   // Future<void> createCommomKeyForContact(String contactUID, String chatId, String? uid) async {

@@ -39,6 +39,20 @@ class AuthRepository {
         .update({Constants.aboutMe: value});
   }
 
+  Future<void> updateUserName({required String value, User? currentUser}) async {
+    await _firestore
+        .collection(Constants.users)
+        .doc(currentUser!.uid)
+        .update({Constants.name: value});
+  }
+
+  Future<void> updateUserImage({required String value, User? currentUser}) async {
+    await _firestore
+        .collection(Constants.users)
+        .doc(currentUser!.uid)
+        .update({Constants.image: value});
+  }
+
    Future<UserModel> getUserData(String uid) async {
     final docSnapshot = await _firestore
         .collection(Constants.users)

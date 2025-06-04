@@ -44,7 +44,7 @@ class Constants {
   static const String uiWhoStartChat = 'uiWhoStartChat';
   static const String chatId = 'chatId';
   static const String commonKey = 'commonKey';
-
+  static const String updateData = 'updateData';
 
   static const String verificationId = 'verificationId';
 

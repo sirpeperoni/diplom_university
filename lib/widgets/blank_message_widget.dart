@@ -62,8 +62,8 @@ class BlankMessageWidget extends StatelessWidget {
                         ),
                         const SizedBox(width: 5,),
                         Icon(
-                          false ? Icons.done_all : Icons.done,
-                          color: false ? Colors.blue[600] : Colors.grey[600],
+                         Icons.done,
+                          color: Colors.grey[600],
                           size: 15,           
                         )
                       ],

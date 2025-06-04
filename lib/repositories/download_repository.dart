@@ -45,7 +45,7 @@ class DownloadRepository extends ChangeNotifier {
         break;
       case 1:
         downloadProgress = progress;
-        notifyListeners();
+        notifyListeners(); 
         break;
       case 2:
         downloadProgress = progress;

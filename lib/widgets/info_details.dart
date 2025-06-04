@@ -117,42 +117,14 @@ class InfoDetails extends StatelessWidget {
                     if(currentUser.uid == userModel!.uid)...{
                       IconButton(icon: const Icon(Icons.edit), onPressed: () {
                           // navigate to edit profile screen
-                          Navigator.of(context).pushNamed(Constants.editAboutMeScreem, arguments: userModel);
+                          //Navigator.of(context).pushNamed(Constants.editAboutMeScreem, arguments: userModel);
+                          Navigator.pushNamed(context, Constants.userInformationScreen, arguments: userModel);
                       }),
                     }
                   ],
                 ),
                 const SizedBox(height: 10),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const SizedBox(
-                      height: 40,
-                      width: 40,
-                      child: Divider(
-                        color: Colors.grey,
-                        thickness: 1,
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Text(
-                      'Друзья',
-                      style: GoogleFonts.openSans(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    const SizedBox(
-                      height: 40,
-                      width: 40,
-                      child: Divider(
-                        color: Colors.grey,
-                        thickness: 1,
-                      ),
-                    ),
-                  ],
-                ),
+
               ],
             ),
           );

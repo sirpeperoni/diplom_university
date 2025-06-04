@@ -73,6 +73,7 @@ class _PeopleScreenState extends State<PeopleScreen> {
                   children: snapshot.data!.docs.map((DocumentSnapshot document) {
                     final data = UserModel.fromMap(
                         document.data()! as Map<String, dynamic>);
+                    print(data);
                     return FriendWidget(
                         friend: data, viewType: FriendViewType.allUsers);
                   }).toList(),

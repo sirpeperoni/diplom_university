@@ -301,6 +301,10 @@ class ChatProvider extends ChangeNotifier {
   Future<String> decryptMessage(String encryptedData,  String contactUID, String chatId,String uid) async {
     return _encryptionService.decryptMessage(encryptedData, contactUID, chatId, uid);
   }
+
+  String? getMessageLocally(String encryptedMessage) {
+    return _encryptionService.getMessageLocally(encryptedMessage);
+  }
 }
 
 
